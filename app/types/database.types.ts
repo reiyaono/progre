@@ -254,29 +254,32 @@ export type Database = {
       workout_set: {
         Row: {
           created_at: string
+          duration_sec: number | null
           id: string
           interval_sec: number | null
-          reps: number
+          reps: number | null
           set_no: number
-          weight: number
+          weight: number | null
           workout_exercise_id: string
         }
         Insert: {
           created_at?: string
+          duration_sec?: number | null
           id?: string
           interval_sec?: number | null
-          reps: number
+          reps?: number | null
           set_no: number
-          weight: number
+          weight?: number | null
           workout_exercise_id: string
         }
         Update: {
           created_at?: string
+          duration_sec?: number | null
           id?: string
           interval_sec?: number | null
-          reps?: number
+          reps?: number | null
           set_no?: number
-          weight?: number
+          weight?: number | null
           workout_exercise_id?: string
         }
         Relationships: [
@@ -331,6 +334,7 @@ export type Database = {
           body_part_id: string | null
           body_part_name: string | null
           date: string | null
+          duration_sec: number | null
           est_1rm: number | null
           exercise_id: string | null
           exercise_name: string | null
@@ -377,6 +381,25 @@ export type Database = {
       }
     }
     Functions: {
+      fn_add_cardio_set: {
+        Args: { p_duration_sec: number; p_we: string }
+        Returns: {
+          created_at: string
+          duration_sec: number | null
+          id: string
+          interval_sec: number | null
+          reps: number | null
+          set_no: number
+          weight: number | null
+          workout_exercise_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "workout_set"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       fn_add_exercise_entry: {
         Args: { p_date: string; p_exercise: string }
         Returns: {
@@ -403,11 +426,12 @@ export type Database = {
         }
         Returns: {
           created_at: string
+          duration_sec: number | null
           id: string
           interval_sec: number | null
-          reps: number
+          reps: number | null
           set_no: number
-          weight: number
+          weight: number | null
           workout_exercise_id: string
         }
         SetofOptions: {
