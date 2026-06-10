@@ -17,7 +17,7 @@ async function onLogout() {
 <template>
   <div class="app-shell">
     <header class="app-header">
-      <span class="brand">OVLD_CP</span>
+      <span class="brand">PROGRE</span>
       <button class="logout" type="button" @click="onLogout">ログアウト</button>
     </header>
 

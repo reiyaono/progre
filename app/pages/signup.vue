@@ -32,6 +32,7 @@ async function onSubmit() {
 <template>
   <main class="auth">
     <form class="card" @submit.prevent="onSubmit">
+      <p class="brand">PROGRE</p>
       <h1>新規登録</h1>
 
       <label>
@@ -81,6 +82,13 @@ async function onSubmit() {
   border: 1px solid var(--border, #e2e2e2);
   border-radius: 12px;
   background: var(--surface, #fff);
+}
+.brand {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  text-align: center;
 }
 h1 {
   margin: 0;

@@ -7,6 +7,17 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  app: {
+    head: {
+      title: 'PROGRE',
+      meta: [
+        { name: 'description', content: '筋トレの記録と漸進性過負荷（progressive overload）を可視化するアプリ' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+      ],
+      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    },
+  },
+
   // @nuxtjs/supabase は SUPABASE_URL / SUPABASE_KEY(anon) を環境変数から読む（ops.md §1）。
   // 認証リダイレクトはモジュール組込で制御し、ログイン済みの login/signup 退避は
   // クライアントミドルウェアで補う（screens.md §2・M2 で追加）。
