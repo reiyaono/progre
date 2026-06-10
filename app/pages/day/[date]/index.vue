@@ -2,6 +2,7 @@
 // 日別ワークアウト（F-04）。その日の種目エントリ一覧＋種目追加/削除。
 import ExerciseEntryRow from '~/components/workout/ExerciseEntryRow.vue'
 import AddExerciseDialog from '~/components/workout/AddExerciseDialog.vue'
+import LoadingSpinner from '~/components/ui/LoadingSpinner.vue'
 import { formatJst } from '~/utils/date'
 
 const route = useRoute()
@@ -41,7 +42,7 @@ function openSets(weId: string) {
       <h1>{{ formatJst(date) }}</h1>
     </header>
 
-    <p v-if="pending" class="muted">読み込み中…</p>
+    <LoadingSpinner v-if="pending" />
 
     <template v-else>
       <div v-if="entries.length" class="list">

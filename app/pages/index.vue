@@ -5,7 +5,7 @@ import { todayJst } from '~/utils/date'
 
 const today = todayJst()
 const month = ref(today.slice(0, 7)) // 'YYYY-MM'
-const { days } = useCalendar(month)
+const { days, pending } = useCalendar(month)
 
 function shiftMonth(m: string, delta: number): string {
   const [y, mm] = m.split('-').map(Number) as [number, number]
@@ -26,6 +26,7 @@ function openDay(date: string) {
       :month="month"
       :days="days"
       :today="today"
+      :loading="pending"
       @select="openDay"
       @prev="month = shiftMonth(month, -1)"
       @next="month = shiftMonth(month, 1)"

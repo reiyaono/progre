@@ -11,8 +11,8 @@ export function useDashboard(filter: Ref<DashboardFilter>, from: Ref<string>) {
     from: from.value,
     ...(filter.value.bodyPartId ? { bodyPartId: filter.value.bodyPartId } : {}),
   }))
-  const { data: volume } = useFetch<VolumeResponse>('/api/dashboard/volume', {
-    query: volumeQuery, default: () => ({ series: [] }),
+  const { data: volume, pending: p1 } = useFetch<VolumeResponse>('/api/dashboard/volume', {
+    query: volumeQuery, lazy: true, default: () => ({ series: [] }),
   })
 
   // ②④ 種目別 最大重量 / 推定1RM（日次）— 種目フィルタ共通
@@ -20,17 +20,20 @@ export function useDashboard(filter: Ref<DashboardFilter>, from: Ref<string>) {
     from: from.value,
     ...(filter.value.exerciseId ? { exerciseId: filter.value.exerciseId } : {}),
   }))
-  const { data: maxWeight } = useFetch<MaxWeightResponse>('/api/dashboard/max-weight', {
-    query: exQuery, default: () => ({ series: [] }),
+  const { data: maxWeight, pending: p2 } = useFetch<MaxWeightResponse>('/api/dashboard/max-weight', {
+    query: exQuery, lazy: true, default: () => ({ series: [] }),
   })
-  const { data: est1rm } = useFetch<Est1rmResponse>('/api/dashboard/est-1rm', {
-    query: exQuery, default: () => ({ series: [] }),
+  const { data: est1rm, pending: p3 } = useFetch<Est1rmResponse>('/api/dashboard/est-1rm', {
+    query: exQuery, lazy: true, default: () => ({ series: [] }),
   })
 
   // ③ 週次OVERLOADED（今週）
-  const { data: overloaded } = useFetch<OverloadedResponse>('/api/dashboard/overloaded', {
-    query: { week: todayJst() }, default: () => ({ week: '', rows: [] }),
+  const { data: overloaded, pending: p4 } = useFetch<OverloadedResponse>('/api/dashboard/overloaded', {
+    query: { week: todayJst() }, lazy: true, default: () => ({ week: '', rows: [] }),
   })
 
-  return { volume, maxWeight, est1rm, overloaded }
+  // いずれかが取得中なら全体ローディング扱い
+  const pending = computed(() => p1.value || p2.value || p3.value || p4.value)
+
+  return { volume, maxWeight, est1rm, overloaded, pending }
 }

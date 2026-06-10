@@ -2,11 +2,13 @@
 // 月カレンダーグリッド。ヘッダ（月送り）＋曜日見出し＋日セル群を表示する。
 import { computed } from 'vue'
 import CalendarDayCell from './CalendarDayCell.vue'
+import LoadingSpinner from '~/components/ui/LoadingSpinner.vue'
 
 const props = defineProps<{
   month: string                    // 'YYYY-MM'（表示対象の月）
   days: Record<string, string[]>   // 'YYYY-MM-DD' -> その日の実施部位のユニーク色配列
   today: string                    // 'YYYY-MM-DD'（今日。JST想定で親が渡す）
+  loading?: boolean                // DBからドット取得中（空状態の早出しを防ぐ）
 }>()
 
 const emit = defineEmits<{
@@ -94,8 +96,10 @@ const isEmpty = computed(() =>
       />
     </div>
 
-    <!-- 空状態メッセージ（§9.8） -->
-    <p v-if="isEmpty" class="empty-msg">記録がありません。日付をタップして開始</p>
+    <!-- ローディング中は空状態を出さずスピナー（初期表示が「空」に見えるのを防ぐ） -->
+    <LoadingSpinner v-if="loading" label="読み込み中…" />
+    <!-- 空状態メッセージ（§9.8）。取得完了後のみ表示 -->
+    <p v-else-if="isEmpty" class="empty-msg">記録がありません。日付をタップして開始</p>
   </div>
 </template>
 

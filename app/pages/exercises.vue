@@ -3,6 +3,7 @@
 import type { Exercise, BodyPart, TrainingMethod } from '~/types/db'
 import BodyPartTabs from '~/components/exercise/BodyPartTabs.vue'
 import ExerciseList from '~/components/exercise/ExerciseList.vue'
+import LoadingSpinner from '~/components/ui/LoadingSpinner.vue'
 import ExerciseEditDialog from '~/components/exercise/ExerciseEditDialog.vue'
 import BodyPartEditDialog from '~/components/exercise/BodyPartEditDialog.vue'
 import MethodEditDialog from '~/components/exercise/MethodEditDialog.vue'
@@ -98,7 +99,7 @@ async function archiveMethod(id: string) {
       </button>
     </div>
 
-    <p v-if="loading" class="muted">読み込み中…</p>
+    <LoadingSpinner v-if="loading" />
     <ExerciseList
       v-else
       :exercises="filteredExercises"

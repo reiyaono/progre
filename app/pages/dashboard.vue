@@ -3,13 +3,14 @@
 import LineChart from '~/components/chart/LineChart.vue'
 import OverloadedCard from '~/components/dashboard/OverloadedCard.vue'
 import DashboardFilter from '~/components/dashboard/DashboardFilter.vue'
+import LoadingSpinner from '~/components/ui/LoadingSpinner.vue'
 
 const em = useExerciseMaster()
 const { bodyParts, exercises } = em
 onMounted(() => em.load())
 
 const { filter, from } = useDashboardFilter()
-const { volume, maxWeight, est1rm, overloaded } = useDashboard(filter, from)
+const { volume, maxWeight, est1rm, overloaded, pending } = useDashboard(filter, from)
 
 // 全体が空か（空状態メッセージ §9.2）
 const isEmpty = computed(() =>
@@ -26,7 +27,9 @@ const isEmpty = computed(() =>
 
     <DashboardFilter v-model="filter" :body-parts="bodyParts" :exercises="exercises" />
 
-    <div v-if="isEmpty" class="empty">
+    <LoadingSpinner v-if="pending" label="集計を読み込み中…" />
+
+    <div v-else-if="isEmpty" class="empty">
       <p>まだ記録がありません。トレーニングを記録するとここに推移が表示されます。</p>
       <NuxtLink to="/" class="btn btn-primary">カレンダーへ</NuxtLink>
     </div>

@@ -2,6 +2,7 @@
 export function useCalendar(month: Ref<string>) {
   const { data, pending, error, refresh } = useFetch(() => `/api/calendar/${month.value}`, {
     watch: [month],
+    lazy: true, // 取得でナビゲーションをブロックしない（遅い本番でも即描画＋スピナー）
     default: () => ({ days: {} as Record<string, string[]> }),
   })
   const days = computed(() => data.value?.days ?? {})

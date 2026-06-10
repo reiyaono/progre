@@ -3,6 +3,7 @@
 import SetRow from '~/components/workout/SetRow.vue'
 import LastRecordBadge from '~/components/workout/LastRecordBadge.vue'
 import LineChart from '~/components/chart/LineChart.vue'
+import LoadingSpinner from '~/components/ui/LoadingSpinner.vue'
 import { isValidWeight, isValidReps, isValidInterval, WEIGHT_STEP } from '~/utils/validation'
 import type { MaxWeightResponse } from '#shared/types/api'
 
@@ -11,7 +12,7 @@ const date = route.params.date as string
 const weId = route.params.weId as string
 
 const supabase = useSupabaseClient()
-const { sets, load, addSet, deleteSet, updateSet } = useSetEditor(weId)
+const { sets, loading: setsLoading, load, addSet, deleteSet, updateSet } = useSetEditor(weId)
 
 // 種目エントリのメタ（種目名・exercise_id・メモ）
 const exerciseId = ref<string | null>(null)
@@ -135,7 +136,8 @@ async function saveMemo() {
     </ClientOnly>
 
     <!-- セット一覧 -->
-    <div v-if="sets.length" class="list">
+    <LoadingSpinner v-if="setsLoading && !sets.length" />
+    <div v-else-if="sets.length" class="list">
       <SetRow
         v-for="s in sets"
         :key="s.id"

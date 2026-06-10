@@ -5,6 +5,7 @@ export function useWorkout(date: string) {
   const supabase = useSupabaseClient()
 
   const { data, pending, error, refresh } = useFetch<DayResponse>(`/api/day/${date}`, {
+    lazy: true, // 取得でブロックしない（遅い本番でも即描画＋スピナー）
     default: () => ({ workoutId: null, entries: [] }),
   })
   const entries = computed(() => data.value?.entries ?? [])
