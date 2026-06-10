@@ -8,8 +8,10 @@ export interface DayEntry {
   bodyPartColor: string
   memo: string | null
   sortOrder: number
-  topSet: { weight: number; reps: number } | null
-  volume: number
+  measureType: 'strength' | 'cardio' // 有酸素は分のみ記録
+  topSet: { weight: number; reps: number } | null // 筋トレのみ
+  volume: number // 筋トレのみ（有酸素は0）
+  durationSec: number | null // 有酸素の合計秒
   setCount: number
 }
 

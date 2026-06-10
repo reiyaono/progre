@@ -16,10 +16,10 @@ export default defineEventHandler(async (event): Promise<DayResponse> => {
   if (wErr) throw createError({ statusCode: 500, statusMessage: wErr.message })
   if (!workout) return { workoutId: null, entries: [] }
 
-  // 種目エントリ（exercise / body_part を結合）
+  // 種目エントリ（exercise / body_part を結合。有酸素判定に name も取得）
   const { data: entriesRaw, error: eErr } = await client
     .from('workout_exercise')
-    .select('id, memo, sort_order, exercise(id, name, body_part(color))')
+    .select('id, memo, sort_order, exercise(id, name, body_part(name, color))')
     .eq('workout_id', workout.id)
     .order('sort_order')
   if (eErr) throw createError({ statusCode: 500, statusMessage: eErr.message })
@@ -27,14 +27,15 @@ export default defineEventHandler(async (event): Promise<DayResponse> => {
   const entries = (entriesRaw ?? []) as any[]
   const weIds = entries.map((e) => e.id)
 
-  // トップセット（v_top_set）とボリューム明細（v_set_detail）をまとめて取得
+  // トップセット（v_top_set・筋トレのみ）／ボリューム・時間・件数（v_set_detail）を取得
   const topByWe = new Map<string, { weight: number; reps: number }>()
   const volByWe = new Map<string, number>()
+  const durByWe = new Map<string, number>()
   const cntByWe = new Map<string, number>()
   if (weIds.length) {
     const [tops, sets] = await Promise.all([
       client.from('v_top_set').select('workout_exercise_id, weight, reps').in('workout_exercise_id', weIds),
-      client.from('v_set_detail').select('workout_exercise_id, volume').in('workout_exercise_id', weIds),
+      client.from('v_set_detail').select('workout_exercise_id, volume, duration_sec').in('workout_exercise_id', weIds),
     ])
     if (tops.error) throw createError({ statusCode: 500, statusMessage: tops.error.message })
     if (sets.error) throw createError({ statusCode: 500, statusMessage: sets.error.message })
@@ -43,23 +44,29 @@ export default defineEventHandler(async (event): Promise<DayResponse> => {
     }
     for (const s of sets.data ?? []) {
       const we = s.workout_exercise_id as string
-      volByWe.set(we, (volByWe.get(we) ?? 0) + Number(s.volume))
+      volByWe.set(we, (volByWe.get(we) ?? 0) + Number(s.volume ?? 0))
+      if (s.duration_sec != null) durByWe.set(we, (durByWe.get(we) ?? 0) + Number(s.duration_sec))
       cntByWe.set(we, (cntByWe.get(we) ?? 0) + 1)
     }
   }
 
   return {
     workoutId: workout.id,
-    entries: entries.map((e) => ({
-      workoutExerciseId: e.id,
-      exerciseId: e.exercise?.id,
-      exerciseName: e.exercise?.name,
-      bodyPartColor: e.exercise?.body_part?.color ?? '#999999',
-      memo: e.memo,
-      sortOrder: e.sort_order,
-      topSet: topByWe.get(e.id) ?? null,
-      volume: volByWe.get(e.id) ?? 0,
-      setCount: cntByWe.get(e.id) ?? 0,
-    })),
+    entries: entries.map((e) => {
+      const isCardio = e.exercise?.body_part?.name === '有酸素'
+      return {
+        workoutExerciseId: e.id,
+        exerciseId: e.exercise?.id,
+        exerciseName: e.exercise?.name,
+        bodyPartColor: e.exercise?.body_part?.color ?? '#999999',
+        memo: e.memo,
+        sortOrder: e.sort_order,
+        measureType: isCardio ? 'cardio' : 'strength',
+        topSet: isCardio ? null : topByWe.get(e.id) ?? null,
+        volume: isCardio ? 0 : volByWe.get(e.id) ?? 0,
+        durationSec: isCardio ? durByWe.get(e.id) ?? 0 : null,
+        setCount: cntByWe.get(e.id) ?? 0,
+      }
+    }),
   }
 })

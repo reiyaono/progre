@@ -14,7 +14,13 @@ const emit = defineEmits<{ open: []; delete: [] }>()
       <span class="body">
         <span class="name">{{ entry.exerciseName }}</span>
         <span class="stats">
-          <template v-if="entry.topSet">
+          <template v-if="entry.measureType === 'cardio'">
+            <template v-if="entry.setCount > 0">
+              合計 {{ Math.round((entry.durationSec ?? 0) / 60) }}分・{{ entry.setCount }}セット
+            </template>
+            <template v-else>未記録</template>
+          </template>
+          <template v-else-if="entry.topSet">
             トップ {{ Number(entry.topSet.weight) }}kg × {{ entry.topSet.reps }}
             ・{{ entry.setCount }}セット・ボリューム {{ entry.volume }}
           </template>

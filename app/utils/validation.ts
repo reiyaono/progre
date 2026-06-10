@@ -15,6 +15,13 @@ export function isValidInterval(sec: number | null): boolean {
   return sec === null || (Number.isInteger(sec) && sec >= 0)
 }
 
+/** 有酸素の時間（分）: 1..999 の整数。 */
+export function isValidDuration(min: number): boolean {
+  return Number.isInteger(min) && min >= DURATION_MIN && min <= DURATION_MAX
+}
+export const DURATION_MIN = 1
+export const DURATION_MAX = 999
+
 export const WEIGHT_STEP = 0.25
 export const REPS_MIN = 1
 export const REPS_MAX = 99

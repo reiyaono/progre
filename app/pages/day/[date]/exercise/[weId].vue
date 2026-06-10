@@ -4,7 +4,7 @@ import SetRow from '~/components/workout/SetRow.vue'
 import LastRecordBadge from '~/components/workout/LastRecordBadge.vue'
 import LineChart from '~/components/chart/LineChart.vue'
 import LoadingSpinner from '~/components/ui/LoadingSpinner.vue'
-import { isValidWeight, isValidReps, isValidInterval, WEIGHT_STEP } from '~/utils/validation'
+import { isValidWeight, isValidReps, isValidInterval, isValidDuration, WEIGHT_STEP } from '~/utils/validation'
 import type { MaxWeightResponse } from '#shared/types/api'
 
 const route = useRoute()
@@ -12,22 +12,24 @@ const date = route.params.date as string
 const weId = route.params.weId as string
 
 const supabase = useSupabaseClient()
-const { sets, loading: setsLoading, load, addSet, deleteSet, updateSet } = useSetEditor(weId)
+const { sets, loading: setsLoading, load, addSet, deleteSet, updateSet, addCardioSet, updateCardioSet } = useSetEditor(weId)
 
-// 種目エントリのメタ（種目名・exercise_id・メモ）
+// 種目エントリのメタ（種目名・exercise_id・メモ・有酸素判定）
 const exerciseId = ref<string | null>(null)
 const exerciseName = ref('')
 const memo = ref('')
+const isCardio = ref(false) // 部位「有酸素」なら分のみ
 
 async function loadMeta() {
   const { data } = await supabase
     .from('workout_exercise')
-    .select('memo, exercise(id, name)')
+    .select('memo, exercise(id, name, body_part(name))')
     .eq('id', weId)
     .single()
   const ex = (data as any)?.exercise
   exerciseId.value = ex?.id ?? null
   exerciseName.value = ex?.name ?? ''
+  isCardio.value = ex?.body_part?.name === '有酸素'
   memo.value = (data as any)?.memo ?? ''
 }
 
@@ -52,11 +54,15 @@ const editingId = ref<string | null>(null)
 const weight = ref(20)
 const reps = ref(10)
 const interval = ref<number | null>(null)
+const durationMin = ref(20) // 有酸素の時間（分）
 
 const weightOk = computed(() => isValidWeight(weight.value))
 const repsOk = computed(() => isValidReps(reps.value))
 const intervalOk = computed(() => isValidInterval(interval.value))
-const canSave = computed(() => weightOk.value && repsOk.value && intervalOk.value)
+const durationOk = computed(() => isValidDuration(durationMin.value))
+const canSave = computed(() =>
+  isCardio.value ? durationOk.value : weightOk.value && repsOk.value && intervalOk.value,
+)
 const isEditing = computed(() => editingId.value !== null)
 
 function stepWeight(d: number) {
@@ -70,14 +76,21 @@ function stepInterval(d: number) {
   const base = interval.value ?? 0
   interval.value = Math.max(0, base + d)
 }
+function stepDuration(d: number) {
+  durationMin.value = Math.min(999, Math.max(1, durationMin.value + d))
+}
 
 function startEdit(id: string) {
   const s = sets.value.find((x) => x.id === id)
   if (!s) return
   editingId.value = id
-  weight.value = Number(s.weight)
-  reps.value = s.reps
-  interval.value = s.interval_sec
+  if (isCardio.value) {
+    durationMin.value = Math.round((s.duration_sec ?? 0) / 60) || 1
+  } else {
+    weight.value = Number(s.weight ?? 0)
+    reps.value = s.reps ?? 1
+    interval.value = s.interval_sec
+  }
 }
 function cancelEdit() {
   editingId.value = null
@@ -85,10 +98,15 @@ function cancelEdit() {
 
 async function onSubmit() {
   if (!canSave.value) return
-  const input = { weight: weight.value, reps: reps.value, interval: interval.value }
   try {
-    if (editingId.value) await updateSet(editingId.value, input)
-    else await addSet(input)
+    if (isCardio.value) {
+      if (editingId.value) await updateCardioSet(editingId.value, durationMin.value)
+      else await addCardioSet(durationMin.value)
+    } else {
+      const input = { weight: weight.value, reps: reps.value, interval: interval.value }
+      if (editingId.value) await updateSet(editingId.value, input)
+      else await addSet(input)
+    }
     editingId.value = null
   } catch (e: any) {
     alert(e?.message ?? '保存に失敗しました')
@@ -123,17 +141,20 @@ async function saveMemo() {
       <h1>{{ exerciseName || '種目' }}</h1>
     </header>
 
-    <LastRecordBadge
-      :last-top-set="last?.lastTopSet ?? null"
-      :best-weight="last?.bestWeight ?? null"
-    />
+    <!-- 重量比較は筋トレのみ（有酸素では非表示） -->
+    <template v-if="!isCardio">
+      <LastRecordBadge
+        :last-top-set="last?.lastTopSet ?? null"
+        :best-weight="last?.bestWeight ?? null"
+      />
 
-    <!-- ミニグラフ: 最大重量推移 -->
-    <ClientOnly>
-      <div v-if="(maxTrend?.series?.length ?? 0) > 0" class="mini-chart">
-        <LineChart :series="maxTrend?.series ?? []" x-type="day" unit="kg" />
-      </div>
-    </ClientOnly>
+      <!-- ミニグラフ: 最大重量推移 -->
+      <ClientOnly>
+        <div v-if="(maxTrend?.series?.length ?? 0) > 0" class="mini-chart">
+          <LineChart :series="maxTrend?.series ?? []" x-type="day" unit="kg" />
+        </div>
+      </ClientOnly>
+    </template>
 
     <!-- セット一覧 -->
     <LoadingSpinner v-if="setsLoading && !sets.length" />
@@ -152,35 +173,48 @@ async function saveMemo() {
     <form class="entry-form" @submit.prevent="onSubmit">
       <h2>{{ isEditing ? 'セットを編集' : 'セットを追加' }}</h2>
 
-      <div class="stepper">
-        <label>重量(kg)</label>
+      <!-- 有酸素: 時間（分）のみ -->
+      <div v-if="isCardio" class="stepper">
+        <label>時間(分)</label>
         <div class="ctrl">
-          <button type="button" class="btn" @click="stepWeight(-WEIGHT_STEP)">−</button>
-          <input v-model.number="weight" type="number" step="0.25" min="0" max="999" inputmode="decimal" />
-          <button type="button" class="btn" @click="stepWeight(WEIGHT_STEP)">＋</button>
+          <button type="button" class="btn" @click="stepDuration(-5)">−</button>
+          <input v-model.number="durationMin" type="number" step="1" min="1" max="999" inputmode="numeric" />
+          <button type="button" class="btn" @click="stepDuration(5)">＋</button>
         </div>
       </div>
 
-      <div class="stepper">
-        <label>回数</label>
-        <div class="ctrl">
-          <button type="button" class="btn" @click="stepReps(-1)">−</button>
-          <input v-model.number="reps" type="number" step="1" min="1" max="99" inputmode="numeric" />
-          <button type="button" class="btn" @click="stepReps(1)">＋</button>
+      <!-- 筋トレ: 重量・回数・インターバル -->
+      <template v-else>
+        <div class="stepper">
+          <label>重量(kg)</label>
+          <div class="ctrl">
+            <button type="button" class="btn" @click="stepWeight(-WEIGHT_STEP)">−</button>
+            <input v-model.number="weight" type="number" step="0.25" min="0" max="999" inputmode="decimal" />
+            <button type="button" class="btn" @click="stepWeight(WEIGHT_STEP)">＋</button>
+          </div>
         </div>
-      </div>
 
-      <div class="stepper">
-        <label>インターバル(秒・任意)</label>
-        <div class="ctrl">
-          <button type="button" class="btn" @click="stepInterval(-30)">−</button>
-          <input v-model.number="interval" type="number" step="1" min="0" inputmode="numeric" placeholder="未記録" />
-          <button type="button" class="btn" @click="stepInterval(30)">＋</button>
+        <div class="stepper">
+          <label>回数</label>
+          <div class="ctrl">
+            <button type="button" class="btn" @click="stepReps(-1)">−</button>
+            <input v-model.number="reps" type="number" step="1" min="1" max="99" inputmode="numeric" />
+            <button type="button" class="btn" @click="stepReps(1)">＋</button>
+          </div>
         </div>
-      </div>
+
+        <div class="stepper">
+          <label>インターバル(秒・任意)</label>
+          <div class="ctrl">
+            <button type="button" class="btn" @click="stepInterval(-30)">−</button>
+            <input v-model.number="interval" type="number" step="1" min="0" inputmode="numeric" placeholder="未記録" />
+            <button type="button" class="btn" @click="stepInterval(30)">＋</button>
+          </div>
+        </div>
+      </template>
 
       <p v-if="!canSave" class="error-text">
-        入力値を確認してください（重量0〜999の0.25刻み / 回数1〜99 / 休憩0以上）。
+        {{ isCardio ? '時間は1〜999分で入力してください。' : '入力値を確認してください（重量0〜999の0.25刻み / 回数1〜99 / 休憩0以上）。' }}
       </p>
 
       <div class="btn-row">

@@ -1,27 +1,35 @@
 <script setup lang="ts">
 // セット記録の1行表示コンポーネント。編集・削除イベントを親へ委譲する。
-
-defineProps<{
+// 有酸素セット（weight=null・duration_sec あり）は「N分」表示に切替。
+const props = defineProps<{
   set: {
     set_no: number
-    weight: number
-    reps: number
+    weight: number | null
+    reps: number | null
     interval_sec: number | null
+    duration_sec: number | null
   }
 }>()
 
 const emit = defineEmits<{ edit: []; delete: [] }>()
+
+// 有酸素 = 重量が無く時間がある
+const isCardio = computed(() => props.set.weight === null && props.set.duration_sec !== null)
+const minutes = computed(() => Math.round((props.set.duration_sec ?? 0) / 60))
 </script>
 
 <template>
   <div class="set-row">
-    <!-- 左側: セット番号・重量×回数・インターバル -->
+    <!-- 左側: セット番号＋主情報（筋トレ=kg×回 / 有酸素=分） -->
     <div class="info">
       <span class="set-no">{{ set.set_no }}セット</span>
-      <span class="volume">{{ Number(set.weight) }}kg × {{ set.reps }}回</span>
-      <span v-if="set.interval_sec !== null" class="interval">
-        休 {{ set.interval_sec }}秒
-      </span>
+      <span v-if="isCardio" class="volume">{{ minutes }}分</span>
+      <template v-else>
+        <span class="volume">{{ Number(set.weight) }}kg × {{ set.reps }}回</span>
+        <span v-if="set.interval_sec !== null" class="interval">
+          休 {{ set.interval_sec }}秒
+        </span>
+      </template>
     </div>
 
     <!-- 右側: 編集・削除ボタン -->

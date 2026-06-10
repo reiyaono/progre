@@ -50,5 +50,25 @@ export function useSetEditor(weId: string) {
     await load()
   }
 
-  return { sets, loading, error, load, addSet, deleteSet, updateSet }
+  // ---- 有酸素（分のみ）---------------------------------------------------------
+  /** 有酸素セット追加（weight/reps=null・duration_sec=分*60）。 */
+  async function addCardioSet(durationMin: number) {
+    const { error: e } = await supabase.rpc('fn_add_cardio_set', {
+      p_we: weId, p_duration_sec: durationMin * 60,
+    })
+    if (e) throw e
+    await load()
+  }
+
+  /** 有酸素セットの更新（時間のみ。weight/reps は null のまま）。 */
+  async function updateCardioSet(id: string, durationMin: number) {
+    const { error: e } = await supabase
+      .from('workout_set')
+      .update({ duration_sec: durationMin * 60, weight: null, reps: null, interval_sec: null })
+      .eq('id', id)
+    if (e) throw e
+    await load()
+  }
+
+  return { sets, loading, error, load, addSet, deleteSet, updateSet, addCardioSet, updateCardioSet }
 }
