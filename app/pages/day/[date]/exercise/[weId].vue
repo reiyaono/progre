@@ -41,13 +41,23 @@ onMounted(() => {
 // 前回比較（§9.4）
 const { last } = useLastRecord(exerciseId, date)
 
-// ミニグラフ: この種目の最大重量推移（v_exercise_max_weight 経由）
+// トップセット推移（日次の最大重量・v_exercise_max_weight 経由）
 const { data: maxTrend } = useFetch<MaxWeightResponse>('/api/dashboard/max-weight', {
   query: computed(() => ({ exerciseId: exerciseId.value })),
   immediate: false,
   watch: [exerciseId],
   default: () => ({ series: [] }),
 })
+
+// 筋ボリューム推移（日次 Σweight×reps・専用エンドポイント）
+const { data: volumeTrend } = useFetch<MaxWeightResponse>(
+  () => `/api/exercise/${exerciseId.value}/volume`,
+  {
+    immediate: false,
+    watch: [exerciseId],
+    default: () => ({ series: [] }),
+  },
+)
 
 // ---- セット入力フォーム（+/− ステッパー） ---------------------------------
 const editingId = ref<string | null>(null)
@@ -141,22 +151,14 @@ async function saveMemo() {
       <h1>{{ exerciseName || '種目' }}</h1>
     </header>
 
-    <!-- 重量比較は筋トレのみ（有酸素では非表示） -->
-    <template v-if="!isCardio">
-      <LastRecordBadge
-        :last-top-set="last?.lastTopSet ?? null"
-        :best-weight="last?.bestWeight ?? null"
-      />
+    <!-- 前回比較バッジ（筋トレのみ・最上部に残す） -->
+    <LastRecordBadge
+      v-if="!isCardio"
+      :last-top-set="last?.lastTopSet ?? null"
+      :best-weight="last?.bestWeight ?? null"
+    />
 
-      <!-- ミニグラフ: 最大重量推移 -->
-      <ClientOnly>
-        <div v-if="(maxTrend?.series?.length ?? 0) > 0" class="mini-chart">
-          <LineChart :series="maxTrend?.series ?? []" x-type="day" unit="kg" />
-        </div>
-      </ClientOnly>
-    </template>
-
-    <!-- セット一覧 -->
+    <!-- ① セット表 -->
     <LoadingSpinner v-if="setsLoading && !sets.length" />
     <div v-else-if="sets.length" class="list">
       <SetRow
@@ -225,7 +227,7 @@ async function saveMemo() {
       </div>
     </form>
 
-    <!-- メモ -->
+    <!-- ③ メモ -->
     <div class="memo-box">
       <h2>メモ</h2>
       <textarea v-model="memo" rows="2" placeholder="この種目のメモ" />
@@ -235,6 +237,23 @@ async function saveMemo() {
         </button>
       </div>
     </div>
+
+    <!-- ④⑤ 推移グラフ（筋トレのみ） -->
+    <template v-if="!isCardio">
+      <div class="chart-box">
+        <h2>筋ボリューム推移</h2>
+        <ClientOnly>
+          <LineChart :series="volumeTrend?.series ?? []" x-type="day" unit="volume" />
+        </ClientOnly>
+      </div>
+
+      <div class="chart-box">
+        <h2>トップセット推移（最大重量）</h2>
+        <ClientOnly>
+          <LineChart :series="maxTrend?.series ?? []" x-type="day" unit="kg" />
+        </ClientOnly>
+      </div>
+    </template>
   </section>
 </template>
 
@@ -267,7 +286,8 @@ h2 {
   gap: 0.5rem;
 }
 .entry-form,
-.memo-box {
+.memo-box,
+.chart-box {
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface);
