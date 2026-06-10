@@ -25,7 +25,8 @@ model: sonnet
 
 ### B. 認証・シード（§9.3 / seed.sql）
 2. `/auth/v1/signup`（PW 8文字以上）で `access_token` と user id が返る。
-3. 新規ユーザーに **body_part=6 / training_method=3 / exercise=6** が自動投入（`handle_new_user`）。
+3. 新規ユーザーに **body_part=7 / training_method=3 / exercise=7** が自動投入（`handle_new_user`）。
+   並びは 胸/肩/腕/背中/脚/腹/有酸素（腕は肩↔背中の間）、腕には「アームカール」が付く。
    - 確認は REST（`/rest/v1/body_part?select=id` を JWT で count）か `docker exec -i ... psql` で `where user_id='<MYID>'`。
 4. PW 7文字の signup が `weak_password` で拒否される。
 
