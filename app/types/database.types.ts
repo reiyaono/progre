@@ -377,6 +377,48 @@ export type Database = {
       }
     }
     Functions: {
+      fn_add_exercise_entry: {
+        Args: { p_date: string; p_exercise: string }
+        Returns: {
+          created_at: string
+          exercise_id: string
+          id: string
+          memo: string | null
+          sort_order: number
+          workout_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "workout_exercise"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      fn_add_set: {
+        Args: {
+          p_interval: number
+          p_reps: number
+          p_we: string
+          p_weight: number
+        }
+        Returns: {
+          created_at: string
+          id: string
+          interval_sec: number | null
+          reps: number
+          set_no: number
+          weight: number
+          workout_exercise_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "workout_set"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      fn_delete_exercise_entry: { Args: { p_we: string }; Returns: undefined }
+      fn_delete_set: { Args: { p_set: string }; Returns: undefined }
       fn_overloaded_report: {
         Args: { p_week: string }
         Returns: {
