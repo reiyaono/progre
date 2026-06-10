@@ -17,6 +17,7 @@ export interface DayEntry {
 
 export interface DayResponse {
   workoutId: string | null
+  place: string | null // ワークアウトの場所名（1:1）
   entries: DayEntry[]
 }
 

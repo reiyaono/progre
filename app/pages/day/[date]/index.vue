@@ -8,9 +8,26 @@ import { formatJst } from '~/utils/date'
 const route = useRoute()
 const date = route.params.date as string
 
-const { entries, pending, addEntry, deleteEntry } = useWorkout(date)
+const {
+  entries, pending, addEntry, deleteEntry,
+  place, placeSuggestions, loadPlaceSuggestions, setPlace,
+} = useWorkout(date)
 
 const showAdd = ref(false)
+
+// 場所入力（取得した place と同期。変化時のみ保存）
+const placeInput = ref('')
+watch(place, (v) => { placeInput.value = v ?? '' }, { immediate: true })
+onMounted(() => loadPlaceSuggestions())
+
+async function savePlace() {
+  if (placeInput.value.trim() === (place.value ?? '')) return
+  try {
+    await setPlace(placeInput.value.trim())
+  } catch (e: any) {
+    alert(e?.message ?? '場所の保存に失敗しました')
+  }
+}
 
 async function onPick(exerciseId: string) {
   try {
@@ -41,6 +58,22 @@ function openSets(weId: string) {
       <NuxtLink :to="`/?month=${date.slice(0, 7)}`" class="back">‹ カレンダー</NuxtLink>
       <h1>{{ formatJst(date) }}</h1>
     </header>
+
+    <!-- 場所（過去の場所名を頻出順で候補表示） -->
+    <div class="place-box">
+      <label for="place-input">場所</label>
+      <input
+        id="place-input"
+        v-model="placeInput"
+        list="place-list"
+        placeholder="例: 〇〇ジム"
+        @blur="savePlace"
+        @keyup.enter="savePlace"
+      />
+      <datalist id="place-list">
+        <option v-for="p in placeSuggestions" :key="p" :value="p" />
+      </datalist>
+    </div>
 
     <LoadingSpinner v-if="pending" />
 
@@ -96,6 +129,23 @@ h1 {
 }
 .add {
   align-self: stretch;
+}
+.place-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.place-box label {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.place-box input {
+  padding: 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--surface);
+  color: var(--text);
 }
 .muted {
   color: var(--muted);

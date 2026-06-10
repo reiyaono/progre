@@ -10,11 +10,17 @@ export default defineEventHandler(async (event): Promise<DayResponse> => {
   }
   const client = await serverSupabaseClient(event)
 
-  // 当日の workout
+  // 当日の workout（場所 workout_place→place も結合）
   const { data: workout, error: wErr } = await client
-    .from('workout').select('id').eq('date', date).maybeSingle()
+    .from('workout').select('id, workout_place(place(name))').eq('date', date).maybeSingle()
   if (wErr) throw createError({ statusCode: 500, statusMessage: wErr.message })
-  if (!workout) return { workoutId: null, entries: [] }
+  if (!workout) return { workoutId: null, place: null, entries: [] }
+  // workout_place / place は to-one だが PostgREST が配列で返す場合にも備える
+  const wpRaw = (workout as any).workout_place
+  const wp = Array.isArray(wpRaw) ? wpRaw[0] : wpRaw
+  const placeRaw = wp?.place
+  const placeObj = Array.isArray(placeRaw) ? placeRaw[0] : placeRaw
+  const place: string | null = placeObj?.name ?? null
 
   // 種目エントリ（exercise / body_part を結合。有酸素判定に name も取得）
   const { data: entriesRaw, error: eErr } = await client
@@ -52,6 +58,7 @@ export default defineEventHandler(async (event): Promise<DayResponse> => {
 
   return {
     workoutId: workout.id,
+    place,
     entries: entries.map((e) => {
       const isCardio = e.exercise?.body_part?.name === '有酸素'
       return {

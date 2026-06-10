@@ -6,9 +6,28 @@ export function useWorkout(date: string) {
 
   const { data, pending, error, refresh } = useFetch<DayResponse>(`/api/day/${date}`, {
     lazy: true, // 取得でブロックしない（遅い本番でも即描画＋スピナー）
-    default: () => ({ workoutId: null, entries: [] }),
+    default: () => ({ workoutId: null, place: null, entries: [] }),
   })
   const entries = computed(() => data.value?.entries ?? [])
+  const place = computed(() => data.value?.place ?? null)
+
+  // 過去に使った場所名（頻出順）。候補表示用。
+  const placeSuggestions = ref<string[]>([])
+  async function loadPlaceSuggestions() {
+    const { data: rows } = await supabase
+      .from('v_place_frequency')
+      .select('place_name, cnt')
+      .order('cnt', { ascending: false })
+      .order('place_name')
+    placeSuggestions.value = (rows ?? []).map((r: any) => r.place_name as string)
+  }
+
+  /** 場所設定（workout を get-or-create して 1:1 リンク。空文字でクリア）。 */
+  async function setPlace(name: string) {
+    const { error: e } = await supabase.rpc('fn_set_workout_place', { p_date: date, p_place: name })
+    if (e) throw e
+    await Promise.all([refresh(), loadPlaceSuggestions()])
+  }
 
   /** 種目エントリ追加（workout は get-or-create・同日同種目は冪等）。 */
   async function addEntry(exerciseId: string) {
@@ -31,5 +50,9 @@ export function useWorkout(date: string) {
     await refresh()
   }
 
-  return { data, entries, pending, error, refresh, addEntry, deleteEntry, updateMemo }
+  return {
+    data, entries, place, pending, error, refresh,
+    addEntry, deleteEntry, updateMemo,
+    placeSuggestions, loadPlaceSuggestions, setPlace,
+  }
 }
