@@ -1,23 +1,35 @@
 <script setup lang="ts">
-// カレンダー（ホーム / F-02）。M4 で実装。M2 時点はプレースホルダ。
-const { user } = useAuth()
+// カレンダー（ホーム / F-02 / §9.5）。常に今日を含む当月を初期表示。
+import CalendarMonth from '~/components/calendar/CalendarMonth.vue'
+import { todayJst } from '~/utils/date'
+
+const today = todayJst()
+const month = ref(today.slice(0, 7)) // 'YYYY-MM'
+const { days } = useCalendar(month)
+
+function shiftMonth(m: string, delta: number): string {
+  const [y, mm] = m.split('-').map(Number) as [number, number]
+  const idx = y * 12 + (mm - 1) + delta
+  const ny = Math.floor(idx / 12)
+  const nm = (idx % 12) + 1
+  return `${ny}-${String(nm).padStart(2, '0')}`
+}
+
+function openDay(date: string) {
+  navigateTo(`/day/${date}`)
+}
 </script>
 
 <template>
   <section>
-    <h1>カレンダー</h1>
-    <p class="muted">ようこそ {{ user?.email }} さん</p>
-    <p class="muted">（M4 で月グリッド・部位色ドットを実装します）</p>
+    <CalendarMonth
+      :month="month"
+      :days="days"
+      :today="today"
+      @select="openDay"
+      @prev="month = shiftMonth(month, -1)"
+      @next="month = shiftMonth(month, 1)"
+      @go-today="month = today.slice(0, 7)"
+    />
   </section>
 </template>
-
-<style scoped>
-h1 {
-  font-size: 1.25rem;
-  margin: 0 0 0.5rem;
-}
-.muted {
-  color: var(--muted);
-  margin: 0.25rem 0;
-}
-</style>
