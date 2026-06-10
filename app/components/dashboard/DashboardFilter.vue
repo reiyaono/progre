@@ -73,7 +73,7 @@ select {
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 0.9rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--text);
 }
 </style>

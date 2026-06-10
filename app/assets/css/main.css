@@ -8,6 +8,25 @@
   --muted: #777f8a;
   --accent: #1f6feb;
   --danger: #c0392b;
+  --warn-bg: #fff6e0;
+  --warn-text: #9a6a00;
+  --warn-border: #f0d99a;
+  color-scheme: light;
+}
+
+/* ダークテーマ（data-theme="dark" を <html> に付与）。配色はCSS変数だけで切替。 */
+:root[data-theme='dark'] {
+  --bg: #14171a;
+  --surface: #1d2125;
+  --border: #2c3238;
+  --text: #e6e8ea;
+  --muted: #8b949e;
+  --accent: #4f8cff;
+  --danger: #e5534b;
+  --warn-bg: #3a2f12;
+  --warn-text: #f0c674;
+  --warn-border: #5c4a1e;
+  color-scheme: dark;
 }
 
 * {
@@ -43,7 +62,8 @@ a {
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
-  background: #fff;
+  background: var(--surface);
+  color: var(--text);
 }
 .btn {
   padding: 0.6rem 0.9rem;
@@ -78,9 +98,9 @@ a {
 }
 .warn {
   margin: 0 0 0.6rem;
-  color: #9a6a00;
-  background: #fff6e0;
-  border: 1px solid #f0d99a;
+  color: var(--warn-text);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
   border-radius: 8px;
   padding: 0.4rem 0.6rem;
   font-size: 0.8rem;

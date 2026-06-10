@@ -15,6 +15,14 @@ export default defineNuxtConfig({
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
       ],
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+      // FOUC防止: ハイドレーション前にテーマを <html> へ反映（保存値→OS設定）。
+      script: [
+        {
+          innerHTML:
+            "(function(){try{var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();",
+          tagPosition: 'head',
+        },
+      ],
     },
   },
 
