@@ -1,0 +1,29 @@
+/* グローバルスタイル（プレーンCSS）。配色は CSS 変数で一元管理。
+   ※ お手本(OVLD)の配色は流用せず独自の中立トーン。 */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --border: #e2e2e2;
+  --text: #1c1f23;
+  --muted: #777f8a;
+  --accent: #1f6feb;
+  --danger: #c0392b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+a {
+  color: var(--accent);
+}
