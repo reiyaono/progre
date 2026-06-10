@@ -133,6 +133,30 @@ export type Database = {
           },
         ]
       }
+      place: {
+        Row: {
+          created_at: string
+          id: string
+          is_archived: boolean
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       training_method: {
         Row: {
           created_at: string
@@ -251,6 +275,46 @@ export type Database = {
           },
         ]
       }
+      workout_place: {
+        Row: {
+          created_at: string
+          place_id: string
+          workout_id: string
+        }
+        Insert: {
+          created_at?: string
+          place_id: string
+          workout_id: string
+        }
+        Update: {
+          created_at?: string
+          place_id?: string
+          workout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_place_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "place"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_place_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "v_place_frequency"
+            referencedColumns: ["place_id"]
+          },
+          {
+            foreignKeyName: "workout_place_workout_id_fkey"
+            columns: ["workout_id"]
+            isOneToOne: true
+            referencedRelation: "workout"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workout_set: {
         Row: {
           created_at: string
@@ -324,6 +388,15 @@ export type Database = {
           exercise_id: string | null
           exercise_name: string | null
           max_weight: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      v_place_frequency: {
+        Row: {
+          cnt: number | null
+          place_id: string | null
+          place_name: string | null
           user_id: string | null
         }
         Relationships: []
@@ -455,6 +528,10 @@ export type Database = {
           prev_volume: number
           this_volume: number
         }[]
+      }
+      fn_set_workout_place: {
+        Args: { p_date: string; p_place: string }
+        Returns: undefined
       }
       fn_week_start: { Args: { d: string }; Returns: string }
     }
