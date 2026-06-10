@@ -38,7 +38,7 @@ function openSets(weId: string) {
 <template>
   <section class="page">
     <header class="head">
-      <NuxtLink to="/" class="back">‹ カレンダー</NuxtLink>
+      <NuxtLink :to="`/?month=${date.slice(0, 7)}`" class="back">‹ カレンダー</NuxtLink>
       <h1>{{ formatJst(date) }}</h1>
     </header>
 

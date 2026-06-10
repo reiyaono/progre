@@ -4,7 +4,14 @@ import CalendarMonth from '~/components/calendar/CalendarMonth.vue'
 import { todayJst } from '~/utils/date'
 
 const today = todayJst()
-const month = ref(today.slice(0, 7)) // 'YYYY-MM'
+// ?month=YYYY-MM があればその月を初期表示（日別から戻ったとき元の月を維持）。
+const route = useRoute()
+const queryMonth = route.query.month
+const initialMonth =
+  typeof queryMonth === 'string' && /^\d{4}-\d{2}$/.test(queryMonth)
+    ? queryMonth
+    : today.slice(0, 7)
+const month = ref(initialMonth)
 const { days, pending } = useCalendar(month)
 
 function shiftMonth(m: string, delta: number): string {
