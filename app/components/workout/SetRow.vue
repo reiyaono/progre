@@ -1,6 +1,8 @@
 <script setup lang="ts">
 // セット記録の1行表示コンポーネント。編集・削除イベントを親へ委譲する。
 // 有酸素セット（weight=null・duration_sec あり）は「N分」表示に切替。
+import { formatTimeJst } from '~/utils/date'
+
 const props = defineProps<{
   set: {
     set_no: number
@@ -8,6 +10,7 @@ const props = defineProps<{
     reps: number | null
     interval_sec: number | null
     duration_sec: number | null
+    created_at: string
   }
 }>()
 
@@ -16,6 +19,7 @@ const emit = defineEmits<{ edit: []; delete: [] }>()
 // 有酸素 = 重量が無く時間がある
 const isCardio = computed(() => props.set.weight === null && props.set.duration_sec !== null)
 const minutes = computed(() => Math.round((props.set.duration_sec ?? 0) / 60))
+const enteredAt = computed(() => formatTimeJst(props.set.created_at))
 </script>
 
 <template>
@@ -30,6 +34,7 @@ const minutes = computed(() => Math.round((props.set.duration_sec ?? 0) / 60))
           休 {{ set.interval_sec }}秒
         </span>
       </template>
+      <span class="entered" title="入力時刻">🕒 {{ enteredAt }}</span>
     </div>
 
     <!-- 右側: 編集・削除ボタン -->
@@ -78,6 +83,12 @@ const minutes = computed(() => Math.round((props.set.duration_sec ?? 0) / 60))
 /* インターバル: 補足情報として控えめに */
 .interval {
   font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* 入力時刻: 直近セットの判別用に控えめ表示 */
+.entered {
+  font-size: 0.72rem;
   color: var(--muted);
 }
 

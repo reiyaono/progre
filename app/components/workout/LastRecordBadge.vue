@@ -3,8 +3,8 @@
 import { formatJst } from '~/utils/date'
 
 defineProps<{
-  /** 前回（この日より前）のトップセット。無ければ null */
-  lastTopSet: { date: string; weight: number; reps: number } | null
+  /** 前回（この日より前）のトップセット。無ければ null。workoutExerciseId は前回セット画面へのリンク用 */
+  lastTopSet: { date: string; weight: number; reps: number; workoutExerciseId: string } | null
   /** 全期間の自己ベスト重量(kg)。無ければ null */
   bestWeight: number | null
 }>()
@@ -12,12 +12,16 @@ defineProps<{
 
 <template>
   <div class="badge-row">
-    <!-- 前回トップセット -->
-    <span v-if="lastTopSet" class="chip">
+    <!-- 前回トップセット（タップで前回のセット画面へ） -->
+    <NuxtLink
+      v-if="lastTopSet"
+      :to="`/day/${lastTopSet.date}/exercise/${lastTopSet.workoutExerciseId}`"
+      class="chip chip--link"
+    >
       <span class="label">前回:</span>
       {{ Number(lastTopSet.weight) }}kg × {{ lastTopSet.reps }}
-      <span class="date">（{{ formatJst(lastTopSet.date) }}）</span>
-    </span>
+      <span class="date">（{{ formatJst(lastTopSet.date) }}）›</span>
+    </NuxtLink>
     <span v-else class="chip chip--muted">前回記録なし</span>
 
     <!-- 自己ベスト重量（null のとき非表示） -->
@@ -64,6 +68,15 @@ defineProps<{
 /* 前回記録なし: 全体をミュートカラーに */
 .chip--muted {
   color: var(--muted);
+}
+
+/* 前回リンク: タップ可能を示す */
+.chip--link {
+  text-decoration: none;
+  cursor: pointer;
+}
+.chip--link:hover {
+  border-color: var(--accent);
 }
 
 /* 自己ベスト: アクセントカラーで強調 */

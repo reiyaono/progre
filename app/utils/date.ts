@@ -62,3 +62,13 @@ export function formatJst(date: IsoDate): string {
   const dt = parseIso(date)
   return `${dt.getUTCFullYear()}/${dt.getUTCMonth() + 1}/${dt.getUTCDate()}（${WEEKDAY_JA[dt.getUTCDay()]}）`
 }
+
+/** timestamptz(ISO文字列) を JST の 'HH:MM' に整形（セット入力時刻の表示用）。 */
+export function formatTimeJst(iso: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: JST_TZ,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(iso))
+}

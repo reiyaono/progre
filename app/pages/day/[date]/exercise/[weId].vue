@@ -42,7 +42,7 @@ onMounted(() => {
 const { last } = useLastRecord(exerciseId, date)
 
 // トップセット推移（日次の最大重量・v_exercise_max_weight 経由）
-const { data: maxTrend } = useFetch<MaxWeightResponse>('/api/dashboard/max-weight', {
+const { data: maxTrend, refresh: refreshMax } = useFetch<MaxWeightResponse>('/api/dashboard/max-weight', {
   query: computed(() => ({ exerciseId: exerciseId.value })),
   immediate: false,
   watch: [exerciseId],
@@ -50,7 +50,7 @@ const { data: maxTrend } = useFetch<MaxWeightResponse>('/api/dashboard/max-weigh
 })
 
 // 筋ボリューム推移（日次 Σweight×reps・専用エンドポイント）
-const { data: volumeTrend } = useFetch<MaxWeightResponse>(
+const { data: volumeTrend, refresh: refreshVolume } = useFetch<MaxWeightResponse>(
   () => `/api/exercise/${exerciseId.value}/volume`,
   {
     immediate: false,
@@ -58,6 +58,13 @@ const { data: volumeTrend } = useFetch<MaxWeightResponse>(
     default: () => ({ series: [] }),
   },
 )
+
+// セット変更後にグラフを連動更新（筋トレのみ）
+function refreshTrends() {
+  if (isCardio.value) return
+  refreshMax()
+  refreshVolume()
+}
 
 // ---- セット入力フォーム（+/− ステッパー） ---------------------------------
 const editingId = ref<string | null>(null)
@@ -118,6 +125,7 @@ async function onSubmit() {
       else await addSet(input)
     }
     editingId.value = null
+    refreshTrends()
   } catch (e: any) {
     alert(e?.message ?? '保存に失敗しました')
   }
@@ -127,6 +135,7 @@ async function onDelete(id: string) {
   try {
     await deleteSet(id)
     if (editingId.value === id) editingId.value = null
+    refreshTrends()
   } catch (e: any) {
     alert(e?.message ?? '削除に失敗しました')
   }

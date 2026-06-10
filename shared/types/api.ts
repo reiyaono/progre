@@ -22,7 +22,8 @@ export interface DayResponse {
 }
 
 export interface LastRecordResponse {
-  lastTopSet: { date: string; weight: number; reps: number } | null
+  // workoutExerciseId は前回セット編集画面へのリンク用
+  lastTopSet: { date: string; weight: number; reps: number; workoutExerciseId: string } | null
   bestWeight: number | null
 }
 

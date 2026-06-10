@@ -16,7 +16,7 @@ export default defineEventHandler(async (event): Promise<LastRecordResponse> => 
   // 前回トップセット = before より前で最も新しい日のトップセット（重量降順で代表1件）
   const { data: lastRows, error: lErr } = await client
     .from('v_top_set')
-    .select('date, weight, reps')
+    .select('date, weight, reps, workout_exercise_id')
     .eq('exercise_id', id)
     .lt('date', before)
     .order('date', { ascending: false })
@@ -36,7 +36,14 @@ export default defineEventHandler(async (event): Promise<LastRecordResponse> => 
   const best = bestRows?.[0]
 
   return {
-    lastTopSet: last ? { date: last.date as string, weight: Number(last.weight), reps: Number(last.reps) } : null,
+    lastTopSet: last
+      ? {
+          date: last.date as string,
+          weight: Number(last.weight),
+          reps: Number(last.reps),
+          workoutExerciseId: last.workout_exercise_id as string,
+        }
+      : null,
     bestWeight: best ? Number(best.max_weight) : null,
   }
 })
