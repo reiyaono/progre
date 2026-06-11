@@ -14,5 +14,16 @@ export function useCalendar(month: Ref<string>) {
   const days = computed(() => data.value?.days ?? {})
   const entriesByDate = computed(() => data.value?.entries ?? {})
   const placesByDate = computed(() => data.value?.places ?? {})
+
+  // 取得した月データを日別共有キャッシュへ流し込む（日別ページの初期表示を即時化）。
+  const { setMany } = useDayCache()
+  watch(
+    data,
+    (d) => {
+      if (d) setMany(d.entries ?? {}, d.places ?? {})
+    },
+    { immediate: true },
+  )
+
   return { days, entriesByDate, placesByDate, pending, error, refresh }
 }

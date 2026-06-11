@@ -4,9 +4,16 @@ import type { DayResponse } from '#shared/types/api'
 export function useWorkout(date: string) {
   const supabase = useSupabaseClient()
 
+  // カレンダーから遷移した場合はプリフェッチ済みデータで即描画（裏で /api/day を refresh）。
+  const cached = useDayCache().get(date)
+
   const { data, pending, error, refresh } = useFetch<DayResponse>(`/api/day/${date}`, {
     lazy: true, // 取得でブロックしない（遅い本番でも即描画＋スピナー）
-    default: () => ({ workoutId: null, place: null, entries: [] }),
+    default: (): DayResponse => ({
+      workoutId: null,
+      place: cached?.place ?? null,
+      entries: cached?.entries ?? [],
+    }),
   })
   const entries = computed(() => data.value?.entries ?? [])
   const place = computed(() => data.value?.place ?? null)

@@ -75,7 +75,8 @@ function openSets(weId: string) {
       </datalist>
     </div>
 
-    <LoadingSpinner v-if="pending" />
+    <!-- プリフェッチ済みなら即描画。空かつ取得中のときだけスピナー（裏で refresh） -->
+    <LoadingSpinner v-if="pending && !entries.length" />
 
     <template v-else>
       <div v-if="entries.length" class="list">
