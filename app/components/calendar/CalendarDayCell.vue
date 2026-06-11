@@ -6,6 +6,7 @@ defineProps<{
   day: number | null   // 表示する日(1..31)。null なら空白セル
   colors: string[]     // その日の実施部位のユニーク色配列（空配列あり得る）
   isToday: boolean     // 今日のセルか
+  isSelected?: boolean // 選択中（プレビュー表示中）のセルか
 }>()
 
 const emit = defineEmits<{ select: [date: string] }>()
@@ -28,8 +29,10 @@ function handleClick(date: string | null) {
     v-else
     type="button"
     class="cell cell--active"
+    :class="{ 'cell--selected': isSelected }"
     :aria-label="`${day}日`"
     :aria-current="isToday ? 'date' : undefined"
+    :aria-pressed="isSelected"
     @click="handleClick(date)"
   >
     <!-- 日番号 -->
@@ -83,6 +86,12 @@ function handleClick(date: string | null) {
 }
 .cell--active:active {
   background: var(--bg);
+}
+
+/* 選択中（プレビュー表示中）: アクセント枠で強調（今日の丸塗りと併存可） */
+.cell--selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 /* ===== 日番号 ===== */

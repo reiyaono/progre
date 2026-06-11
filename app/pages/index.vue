@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // カレンダー（ホーム / F-02 / §9.5）。常に今日を含む当月を初期表示。
 import CalendarMonth from '~/components/calendar/CalendarMonth.vue'
+import CalendarDayPreview from '~/components/calendar/CalendarDayPreview.vue'
 import { todayJst } from '~/utils/date'
 
 const today = todayJst()
@@ -14,6 +15,9 @@ const initialMonth =
 const month = ref(initialMonth)
 const { days, pending } = useCalendar(month)
 
+// 選択中の日付。1回目タップでプレビュー表示、同じ日をもう一度タップで詳細へ。
+const selectedDate = ref<string | null>(null)
+
 function shiftMonth(m: string, delta: number): string {
   const [y, mm] = m.split('-').map(Number) as [number, number]
   const idx = y * 12 + (mm - 1) + delta
@@ -22,8 +26,20 @@ function shiftMonth(m: string, delta: number): string {
   return `${ny}-${String(nm).padStart(2, '0')}`
 }
 
-function openDay(date: string) {
+// 日セルのタップ: 未選択/別日なら選択してメニュー表示、同じ日の再タップで詳細へ。
+function onSelectDate(date: string) {
+  if (selectedDate.value === date) openDetail(date)
+  else selectedDate.value = date
+}
+
+function openDetail(date: string) {
   navigateTo(`/day/${date}`)
+}
+
+// 月を移動したら選択を解除（別月の旧プレビューが残らないように）。
+function changeMonth(m: string) {
+  selectedDate.value = null
+  month.value = m
 }
 </script>
 
@@ -33,11 +49,19 @@ function openDay(date: string) {
       :month="month"
       :days="days"
       :today="today"
+      :selected="selectedDate"
       :loading="pending"
-      @select="openDay"
-      @prev="month = shiftMonth(month, -1)"
-      @next="month = shiftMonth(month, 1)"
-      @go-today="month = today.slice(0, 7)"
+      @select="onSelectDate"
+      @prev="changeMonth(shiftMonth(month, -1))"
+      @next="changeMonth(shiftMonth(month, 1))"
+      @go-today="changeMonth(today.slice(0, 7))"
+    />
+
+    <!-- 選択日のメニュー（1回目タップで表示・行/詳細リンクで日別へ） -->
+    <CalendarDayPreview
+      v-if="selectedDate"
+      :date="selectedDate"
+      @open="openDetail(selectedDate)"
     />
   </section>
 </template>
