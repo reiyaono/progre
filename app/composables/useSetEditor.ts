@@ -70,5 +70,28 @@ export function useSetEditor(weId: string) {
     await load()
   }
 
-  return { sets, loading, error, load, addSet, deleteSet, updateSet, addCardioSet, updateCardioSet }
+  // ---- 自重（回数のみ）---------------------------------------------------------
+  /** 自重セット追加（weight/interval/duration=null・reps=値）。 */
+  async function addBodyweightSet(reps: number) {
+    const { error: e } = await supabase.rpc('fn_add_bodyweight_set', {
+      p_we: weId, p_reps: reps,
+    })
+    if (e) throw e
+    await load()
+  }
+
+  /** 自重セットの更新（回数のみ。weight/interval/duration は null のまま）。 */
+  async function updateBodyweightSet(id: string, reps: number) {
+    const { error: e } = await supabase
+      .from('workout_set')
+      .update({ reps, weight: null, interval_sec: null, duration_sec: null })
+      .eq('id', id)
+    if (e) throw e
+    await load()
+  }
+
+  return {
+    sets, loading, error, load, addSet, deleteSet, updateSet,
+    addCardioSet, updateCardioSet, addBodyweightSet, updateBodyweightSet,
+  }
 }

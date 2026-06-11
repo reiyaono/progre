@@ -22,10 +22,10 @@ export default defineEventHandler(async (event): Promise<DayResponse> => {
   const placeObj = Array.isArray(placeRaw) ? placeRaw[0] : placeRaw
   const place: string | null = placeObj?.name ?? null
 
-  // 種目エントリ（exercise / body_part を結合。有酸素判定に name も取得）
+  // 種目エントリ（exercise / body_part / training_method を結合。有酸素・自重判定に name も取得）
   const { data: entriesRaw, error: eErr } = await client
     .from('workout_exercise')
-    .select('id, memo, sort_order, exercise(id, name, body_part(name, color))')
+    .select('id, memo, sort_order, exercise(id, name, body_part(name, color), training_method(name))')
     .eq('workout_id', workout.id)
     .order('sort_order')
   if (eErr) throw createError({ statusCode: 500, statusMessage: eErr.message })
@@ -38,10 +38,11 @@ export default defineEventHandler(async (event): Promise<DayResponse> => {
   const volByWe = new Map<string, number>()
   const durByWe = new Map<string, number>()
   const cntByWe = new Map<string, number>()
+  const repsByWe = new Map<string, number>() // 自重: 最大回数
   if (weIds.length) {
     const [tops, sets] = await Promise.all([
       client.from('v_top_set').select('workout_exercise_id, weight, reps').in('workout_exercise_id', weIds),
-      client.from('v_set_detail').select('workout_exercise_id, volume, duration_sec').in('workout_exercise_id', weIds),
+      client.from('v_set_detail').select('workout_exercise_id, volume, duration_sec, weight, reps').in('workout_exercise_id', weIds),
     ])
     if (tops.error) throw createError({ statusCode: 500, statusMessage: tops.error.message })
     if (sets.error) throw createError({ statusCode: 500, statusMessage: sets.error.message })
@@ -52,6 +53,10 @@ export default defineEventHandler(async (event): Promise<DayResponse> => {
       const we = s.workout_exercise_id as string
       volByWe.set(we, (volByWe.get(we) ?? 0) + Number(s.volume ?? 0))
       if (s.duration_sec != null) durByWe.set(we, (durByWe.get(we) ?? 0) + Number(s.duration_sec))
+      // 自重セット（重量なし・回数あり）は最大回数を集計
+      if (s.weight == null && s.reps != null) {
+        repsByWe.set(we, Math.max(repsByWe.get(we) ?? 0, Number(s.reps)))
+      }
       cntByWe.set(we, (cntByWe.get(we) ?? 0) + 1)
     }
   }
@@ -61,6 +66,8 @@ export default defineEventHandler(async (event): Promise<DayResponse> => {
     place,
     entries: entries.map((e) => {
       const isCardio = e.exercise?.body_part?.name === '有酸素'
+      const isBodyweight = !isCardio && e.exercise?.training_method?.name === '自重'
+      const measureType = isCardio ? 'cardio' : isBodyweight ? 'bodyweight' : 'strength'
       return {
         workoutExerciseId: e.id,
         exerciseId: e.exercise?.id,
@@ -68,10 +75,11 @@ export default defineEventHandler(async (event): Promise<DayResponse> => {
         bodyPartColor: e.exercise?.body_part?.color ?? '#999999',
         memo: e.memo,
         sortOrder: e.sort_order,
-        measureType: isCardio ? 'cardio' : 'strength',
-        topSet: isCardio ? null : topByWe.get(e.id) ?? null,
-        volume: isCardio ? 0 : volByWe.get(e.id) ?? 0,
+        measureType,
+        topSet: measureType === 'strength' ? topByWe.get(e.id) ?? null : null,
+        volume: measureType === 'strength' ? volByWe.get(e.id) ?? 0 : 0,
         durationSec: isCardio ? durByWe.get(e.id) ?? 0 : null,
+        topReps: isBodyweight ? repsByWe.get(e.id) ?? 0 : null,
         setCount: cntByWe.get(e.id) ?? 0,
       }
     }),

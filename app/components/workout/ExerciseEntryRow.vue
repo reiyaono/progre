@@ -20,6 +20,12 @@ const emit = defineEmits<{ open: []; delete: [] }>()
             </template>
             <template v-else>未記録</template>
           </template>
+          <template v-else-if="entry.measureType === 'bodyweight'">
+            <template v-if="entry.setCount > 0">
+              最高 {{ entry.topReps ?? 0 }}回・{{ entry.setCount }}セット
+            </template>
+            <template v-else>未記録</template>
+          </template>
           <template v-else-if="entry.topSet">
             トップ {{ Number(entry.topSet.weight) }}kg × {{ entry.topSet.reps }}
             ・{{ entry.setCount }}セット・ボリューム {{ entry.volume }}

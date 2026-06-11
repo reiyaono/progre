@@ -18,6 +18,10 @@ const emit = defineEmits<{ edit: []; delete: [] }>()
 
 // 有酸素 = 重量が無く時間がある
 const isCardio = computed(() => props.set.weight === null && props.set.duration_sec !== null)
+// 自重 = 重量も時間も無く回数だけ
+const isBodyweight = computed(
+  () => props.set.weight === null && props.set.duration_sec === null && props.set.reps !== null,
+)
 const minutes = computed(() => Math.round((props.set.duration_sec ?? 0) / 60))
 const enteredAt = computed(() => formatTimeJst(props.set.created_at))
 </script>
@@ -28,6 +32,7 @@ const enteredAt = computed(() => formatTimeJst(props.set.created_at))
     <div class="info">
       <span class="set-no">{{ set.set_no }}セット</span>
       <span v-if="isCardio" class="volume">{{ minutes }}分</span>
+      <span v-else-if="isBodyweight" class="volume">{{ set.reps }}回</span>
       <template v-else>
         <span class="volume">{{ Number(set.weight) }}kg × {{ set.reps }}回</span>
         <span v-if="set.interval_sec !== null" class="interval">

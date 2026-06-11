@@ -249,6 +249,13 @@ export type Database = {
             foreignKeyName: "workout_exercise_exercise_id_fkey"
             columns: ["exercise_id"]
             isOneToOne: false
+            referencedRelation: "v_exercise_max_reps"
+            referencedColumns: ["exercise_id"]
+          },
+          {
+            foreignKeyName: "workout_exercise_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
             referencedRelation: "v_exercise_max_weight"
             referencedColumns: ["exercise_id"]
           },
@@ -382,6 +389,16 @@ export type Database = {
         }
         Relationships: []
       }
+      v_exercise_max_reps: {
+        Row: {
+          date: string | null
+          exercise_id: string | null
+          exercise_name: string | null
+          max_reps: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       v_exercise_max_weight: {
         Row: {
           date: string | null
@@ -454,6 +471,25 @@ export type Database = {
       }
     }
     Functions: {
+      fn_add_bodyweight_set: {
+        Args: { p_reps: number; p_we: string }
+        Returns: {
+          created_at: string
+          duration_sec: number | null
+          id: string
+          interval_sec: number | null
+          reps: number | null
+          set_no: number
+          weight: number | null
+          workout_exercise_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "workout_set"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       fn_add_cardio_set: {
         Args: { p_duration_sec: number; p_we: string }
         Returns: {
