@@ -28,6 +28,7 @@ export interface CalendarMonthResponse {
   days: Record<string, string[]> // 'YYYY-MM-DD' -> 実施部位のユニーク色配列（ドット用）
   entries: Record<string, DayEntry[]> // 'YYYY-MM-DD' -> その日の種目メニュー
   places: Record<string, string | null> // 'YYYY-MM-DD' -> 場所名
+  supplements: Record<string, boolean> // 'YYYY-MM-DD' -> 💊（その日サプリ摂取あり）
 }
 
 export interface LastRecordResponse {

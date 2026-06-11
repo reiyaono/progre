@@ -6,11 +6,14 @@ import type { Tables, TablesInsert, TablesUpdate } from './database.types'
 export type BodyPart = Tables<'body_part'>
 export type TrainingMethod = Tables<'training_method'>
 export type Exercise = Tables<'exercise'>
+export type Supplement = Tables<'supplement'>
+export type SupplementTiming = Tables<'supplement_timing'>
 
 // 記録系
 export type Workout = Tables<'workout'>
 export type WorkoutExercise = Tables<'workout_exercise'>
 export type WorkoutSet = Tables<'workout_set'>
+export type SupplementIntake = Tables<'supplement_intake'>
 
 // Insert/Update（CRUD で利用）
 export type ExerciseInsert = TablesInsert<'exercise'>
@@ -23,6 +26,12 @@ export type WorkoutInsert = TablesInsert<'workout'>
 export type WorkoutExerciseInsert = TablesInsert<'workout_exercise'>
 export type WorkoutSetInsert = TablesInsert<'workout_set'>
 export type WorkoutSetUpdate = TablesUpdate<'workout_set'>
+export type SupplementInsert = TablesInsert<'supplement'>
+export type SupplementUpdate = TablesUpdate<'supplement'>
+export type SupplementTimingInsert = TablesInsert<'supplement_timing'>
+export type SupplementTimingUpdate = TablesUpdate<'supplement_timing'>
+export type SupplementIntakeInsert = TablesInsert<'supplement_intake'>
+export type SupplementIntakeUpdate = TablesUpdate<'supplement_intake'>
 
 // 集計ビューの行（ダッシュボード等で利用・M5）
 export type VTopSet = Tables<'v_top_set'>

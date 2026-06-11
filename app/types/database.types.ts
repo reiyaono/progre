@@ -157,6 +157,108 @@ export type Database = {
         }
         Relationships: []
       }
+      supplement: {
+        Row: {
+          created_at: string
+          id: string
+          is_archived: boolean
+          name: string
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          name: string
+          sort_order?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          name?: string
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      supplement_intake: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          quantity: number
+          sort_order: number
+          supplement_id: string
+          timing_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          quantity?: number
+          sort_order?: number
+          supplement_id: string
+          timing_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          quantity?: number
+          sort_order?: number
+          supplement_id?: string
+          timing_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplement_intake_supplement_id_fkey"
+            columns: ["supplement_id"]
+            isOneToOne: false
+            referencedRelation: "supplement"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplement_intake_timing_id_fkey"
+            columns: ["timing_id"]
+            isOneToOne: false
+            referencedRelation: "supplement_timing"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplement_timing: {
+        Row: {
+          created_at: string
+          id: string
+          is_archived: boolean
+          name: string
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          name: string
+          sort_order?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          name?: string
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       training_method: {
         Row: {
           created_at: string

@@ -9,6 +9,7 @@ const props = defineProps<{
   days: Record<string, string[]>   // 'YYYY-MM-DD' -> その日の実施部位のユニーク色配列
   today: string                    // 'YYYY-MM-DD'（今日。JST想定で親が渡す）
   selected?: string | null         // 選択中の日（プレビュー表示中・ハイライト用）
+  supplements?: Record<string, boolean> // 'YYYY-MM-DD' -> サプリ摂取あり（💊マーク用）
   loading?: boolean                // DBからドット取得中（空状態の早出しを防ぐ）
 }>()
 
@@ -94,6 +95,7 @@ const isEmpty = computed(() =>
         :colors="cell.date ? (days[cell.date] ?? []) : []"
         :is-today="cell.date === today"
         :is-selected="cell.date !== null && cell.date === selected"
+        :has-supplement="cell.date ? (supplements?.[cell.date] ?? false) : false"
         @select="emit('select', $event)"
       />
     </div>

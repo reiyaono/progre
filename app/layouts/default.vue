@@ -9,6 +9,7 @@ const { toggle } = useTheme()
 const navItems = [
   { to: '/', label: 'カレンダー', icon: '📅' },
   { to: '/exercises', label: '種目', icon: '🏋️' },
+  { to: '/supplements', label: 'サプリ', icon: '💊' },
   { to: '/dashboard', label: '分析', icon: '📈' },
 ]
 

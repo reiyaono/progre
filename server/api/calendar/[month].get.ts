@@ -19,7 +19,7 @@ export default defineEventHandler(async (event): Promise<CalendarMonthResponse> 
   // ① その月の workout＋種目メタ（場所・部位・方法も結合。セット未入力でもエントリは出す）
   // ② 集計（v_top_set＝トップセット / v_set_detail＝ボリューム・時間・件数・最大回数）
   // をまとめて並列取得（月範囲フィルタ＝RLSでユーザーに限定）。
-  const [wRes, topRes, setRes] = await Promise.all([
+  const [wRes, topRes, setRes, supRes] = await Promise.all([
     client
       .from('workout')
       .select(
@@ -33,10 +33,17 @@ export default defineEventHandler(async (event): Promise<CalendarMonthResponse> 
       .select('workout_exercise_id, volume, duration_sec, weight, reps')
       .gte('date', start)
       .lt('date', next),
+    // サプリ摂取のある日（💊マーク用）。日付だけ取得して集合化。
+    client.from('supplement_intake').select('date').gte('date', start).lt('date', next),
   ])
   if (wRes.error) throw createError({ statusCode: 500, statusMessage: wRes.error.message })
   if (topRes.error) throw createError({ statusCode: 500, statusMessage: topRes.error.message })
   if (setRes.error) throw createError({ statusCode: 500, statusMessage: setRes.error.message })
+  if (supRes.error) throw createError({ statusCode: 500, statusMessage: supRes.error.message })
+
+  // 摂取のある日付集合
+  const supplements: Record<string, boolean> = {}
+  for (const r of supRes.data ?? []) supplements[r.date as string] = true
 
   // workout_exercise_id ごとの集計マップ（day API と同一ロジック）
   const topByWe = new Map<string, { weight: number; reps: number }>()
@@ -108,5 +115,5 @@ export default defineEventHandler(async (event): Promise<CalendarMonthResponse> 
     days[date] = colors
   }
 
-  return { days, entries, places }
+  return { days, entries, places, supplements }
 })

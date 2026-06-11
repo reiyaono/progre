@@ -8,12 +8,13 @@ export function useCalendar(month: Ref<string>) {
     {
       watch: [month],
       lazy: true, // 取得でナビゲーションをブロックしない（遅い本番でも即描画＋スピナー）
-      default: () => ({ days: {}, entries: {}, places: {} }),
+      default: () => ({ days: {}, entries: {}, places: {}, supplements: {} }),
     },
   )
   const days = computed(() => data.value?.days ?? {})
   const entriesByDate = computed(() => data.value?.entries ?? {})
   const placesByDate = computed(() => data.value?.places ?? {})
+  const supplementsByDate = computed(() => data.value?.supplements ?? {})
 
   // 取得した月データを日別共有キャッシュへ流し込む（日別ページの初期表示を即時化）。
   const { setMany } = useDayCache()
@@ -25,5 +26,5 @@ export function useCalendar(month: Ref<string>) {
     { immediate: true },
   )
 
-  return { days, entriesByDate, placesByDate, pending, error, refresh }
+  return { days, entriesByDate, placesByDate, supplementsByDate, pending, error, refresh }
 }

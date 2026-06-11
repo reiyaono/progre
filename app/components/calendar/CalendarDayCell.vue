@@ -7,6 +7,7 @@ defineProps<{
   colors: string[]     // その日の実施部位のユニーク色配列（空配列あり得る）
   isToday: boolean     // 今日のセルか
   isSelected?: boolean // 選択中（プレビュー表示中）のセルか
+  hasSupplement?: boolean // その日サプリ摂取あり（💊マーク）
 }>()
 
 const emit = defineEmits<{ select: [date: string] }>()
@@ -35,6 +36,9 @@ function handleClick(date: string | null) {
     :aria-pressed="isSelected"
     @click="handleClick(date)"
   >
+    <!-- サプリ摂取マーク（部位ドットとは独立。右上） -->
+    <span v-if="hasSupplement" class="supp-mark" aria-label="サプリ摂取あり">💊</span>
+
     <!-- 日番号 -->
     <span class="day-num" :class="{ 'day-num--today': isToday }">{{ day }}</span>
 
@@ -92,6 +96,16 @@ function handleClick(date: string | null) {
 .cell--selected {
   border-color: var(--accent);
   box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* サプリ摂取マーク（セル右上・ドットと独立） */
+.supp-mark {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 0.6rem;
+  line-height: 1;
+  pointer-events: none;
 }
 
 /* ===== 日番号 ===== */

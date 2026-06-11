@@ -13,7 +13,7 @@ const initialMonth =
     ? queryMonth
     : today.slice(0, 7)
 const month = ref(initialMonth)
-const { days, entriesByDate, placesByDate, pending } = useCalendar(month)
+const { days, entriesByDate, placesByDate, supplementsByDate, pending } = useCalendar(month)
 
 // 選択中の日付。1回目タップでプレビュー表示、同じ日をもう一度タップで詳細へ。
 const selectedDate = ref<string | null>(null)
@@ -58,6 +58,7 @@ function changeMonth(m: string) {
       :days="days"
       :today="today"
       :selected="selectedDate"
+      :supplements="supplementsByDate"
       :loading="pending"
       @select="onSelectDate"
       @prev="changeMonth(shiftMonth(month, -1))"
