@@ -4,6 +4,7 @@
 - [難易度: 低, 優先度: 低] export機能が欲しい 
 
 ### 完了
+- [x] [難易度: 小] セット入力時のトースト通知 — 追加/更新/削除の成否を画面下に短時間表示（入力できたかの分かりやすさ向上）。`useToast` ＋ `ui/ToastHost`（default レイアウト常設）を新設。エラーも同トーストに統一
 - [x] [難易度: 小] もっさり対策③マスタの重複ロード抑止 — `useExerciseMaster.load()` をセッション内ロード済みならスキップ（CRUD は `load(true)` で強制更新、ユーザー変化でキャッシュ破棄）。exercises/dashboard を開くたびの3クエリ再取得を削減
 - [x] [難易度: 中] もっさり対策②ダッシュボードAPI集約 — `/api/dashboard/{volume,max-weight,est-1rm,overloaded}` の4往復を `/api/dashboard/summary` 1本に集約（サーバ内 Promise.all）。ブラウザ↔サーバ往復とSupabase接続数を削減。既存4本は他用途で残置。リグレッションで個別4本と同値を実証
 - [x] [難易度: 中] もっさり対策①カレンダー一括プリフェッチ — `/api/calendar/[month]` をドット＋その月の全日メニュー＋場所を1回返すよう拡張（`CalendarMonthResponse`）。日付タップ時の `/api/day` 往復を廃し、クライアントキャッシュで即時表示。無料Supabaseのレイテンシ対策

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 // 共通レイアウト（screens.md §5）。上部ヘッダ＋下部ボトムナビ。
 // スマホ前提のため主要導線はボトムナビに置く。
+import ToastHost from '~/components/ui/ToastHost.vue'
+
 const { logout } = useAuth()
 const { toggle } = useTheme()
 
@@ -42,6 +44,9 @@ async function onLogout() {
         <span class="nav-label">{{ item.label }}</span>
       </NuxtLink>
     </nav>
+
+    <!-- トースト通知（操作の成否表示） -->
+    <ToastHost />
   </div>
 </template>
 

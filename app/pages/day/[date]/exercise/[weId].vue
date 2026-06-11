@@ -12,6 +12,7 @@ const date = route.params.date as string
 const weId = route.params.weId as string
 
 const supabase = useSupabaseClient()
+const toast = useToast()
 const {
   sets, loading: setsLoading, load, addSet, deleteSet, updateSet,
   addCardioSet, updateCardioSet, addBodyweightSet, updateBodyweightSet,
@@ -138,6 +139,7 @@ function cancelEdit() {
 
 async function onSubmit() {
   if (!canSave.value) return
+  const wasEditing = editingId.value !== null
   try {
     if (isCardio.value) {
       if (editingId.value) await updateCardioSet(editingId.value, durationMin.value)
@@ -152,8 +154,9 @@ async function onSubmit() {
     }
     editingId.value = null
     refreshTrends()
+    toast.success(wasEditing ? 'セットを更新しました' : 'セットを追加しました')
   } catch (e: any) {
-    alert(e?.message ?? '保存に失敗しました')
+    toast.error(e?.message ?? '保存に失敗しました')
   }
 }
 
@@ -162,8 +165,9 @@ async function onDelete(id: string) {
     await deleteSet(id)
     if (editingId.value === id) editingId.value = null
     refreshTrends()
+    toast.success('セットを削除しました')
   } catch (e: any) {
-    alert(e?.message ?? '削除に失敗しました')
+    toast.error(e?.message ?? '削除に失敗しました')
   }
 }
 
