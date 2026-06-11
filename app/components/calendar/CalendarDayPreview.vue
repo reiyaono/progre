@@ -1,22 +1,18 @@
 <script setup lang="ts">
 // カレンダーで選択した日の「メニュー」をインライン表示（読み取り専用プレビュー）。
 // 種目名・セット数・サマリを並べ、行/ボタンのタップで日別詳細へ。
-// データは日別と同じ /api/day/[date]（measureType で表示出し分け）。
+// データは月取得済みキャッシュ（useCalendar）から props で受け取り、ネット往復しない。
 import LoadingSpinner from '~/components/ui/LoadingSpinner.vue'
 import { formatJst } from '~/utils/date'
-import type { DayResponse } from '#shared/types/api'
+import type { DayEntry } from '#shared/types/api'
 
-const props = defineProps<{ date: string }>()
+defineProps<{
+  date: string
+  entries: DayEntry[] // その日の種目メニュー（親＝月キャッシュから）
+  place: string | null // 場所名
+  loading?: boolean // 月データ取得中（キャッシュ未到達のあいだ）
+}>()
 const emit = defineEmits<{ open: [] }>() // 日別詳細へ遷移（親がルーティング）
-
-// 選択日が変わるたび取得。lazy でカレンダー操作をブロックしない。
-const { data, pending } = useFetch<DayResponse>(() => `/api/day/${props.date}`, {
-  watch: [() => props.date],
-  lazy: true,
-  default: () => ({ workoutId: null, place: null, entries: [] }),
-})
-const entries = computed(() => data.value?.entries ?? [])
-const place = computed(() => data.value?.place ?? null)
 </script>
 
 <template>
@@ -28,7 +24,7 @@ const place = computed(() => data.value?.place ?? null)
       <span class="to-detail">詳細 ›</span>
     </button>
 
-    <LoadingSpinner v-if="pending && !entries.length" />
+    <LoadingSpinner v-if="loading && !entries.length" />
 
     <!-- 種目リスト（読み取り専用。タップで詳細へ） -->
     <div v-else-if="entries.length" class="list">

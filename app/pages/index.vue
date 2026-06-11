@@ -13,10 +13,18 @@ const initialMonth =
     ? queryMonth
     : today.slice(0, 7)
 const month = ref(initialMonth)
-const { days, pending } = useCalendar(month)
+const { days, entriesByDate, placesByDate, pending } = useCalendar(month)
 
 // 選択中の日付。1回目タップでプレビュー表示、同じ日をもう一度タップで詳細へ。
 const selectedDate = ref<string | null>(null)
+
+// プレビューは月取得済みキャッシュから引く（タップ時のネット往復なし）。
+const selectedEntries = computed(() =>
+  selectedDate.value ? entriesByDate.value[selectedDate.value] ?? [] : [],
+)
+const selectedPlace = computed(() =>
+  selectedDate.value ? placesByDate.value[selectedDate.value] ?? null : null,
+)
 
 function shiftMonth(m: string, delta: number): string {
   const [y, mm] = m.split('-').map(Number) as [number, number]
@@ -57,10 +65,14 @@ function changeMonth(m: string) {
       @go-today="changeMonth(today.slice(0, 7))"
     />
 
-    <!-- 選択日のメニュー（1回目タップで表示・行/詳細リンクで日別へ） -->
+    <!-- 選択日のメニュー（1回目タップで表示・行/詳細リンクで日別へ）。
+         データは月取得済みキャッシュから（タップ時のネット往復なし）。 -->
     <CalendarDayPreview
       v-if="selectedDate"
       :date="selectedDate"
+      :entries="selectedEntries"
+      :place="selectedPlace"
+      :loading="pending"
       @open="openDetail(selectedDate)"
     />
   </section>

@@ -22,6 +22,14 @@ export interface DayResponse {
   entries: DayEntry[]
 }
 
+// カレンダー月次（F-02）。ドット＋その月の全日メニューを1回でまとめ取得し、
+// 日付タップ時のネット往復をなくす（クライアントキャッシュで即時表示）。
+export interface CalendarMonthResponse {
+  days: Record<string, string[]> // 'YYYY-MM-DD' -> 実施部位のユニーク色配列（ドット用）
+  entries: Record<string, DayEntry[]> // 'YYYY-MM-DD' -> その日の種目メニュー
+  places: Record<string, string | null> // 'YYYY-MM-DD' -> 場所名
+}
+
 export interface LastRecordResponse {
   // workoutExerciseId は前回セット編集画面へのリンク用
   lastTopSet: { date: string; weight: number; reps: number; workoutExerciseId: string } | null
