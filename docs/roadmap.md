@@ -4,6 +4,7 @@
 - [難易度: 低, 優先度: 低] export機能が欲しい 
 
 ### 完了
+- [x] [難易度: 中] もっさり対策⑤種目詳細の待ち解消＋ムダ撃ち削減 — 日別キャッシュ（`useDayCache`）の DayEntry でメタを即 seed。グラフは `immediate`（seed時）＋ `loadMeta` の `refreshTrends`（未キャッシュ/種別ズレ時）で発火、`watch:false` 化。これにより「weId→exerciseId 解決を待つ直列2往復」を解消し、種別に応じて必要なグラフだけ取得（筋トレ=max/volume、自重=reps、有酸素=なし）。※クライアント変更のみ・実ブラウザ検証は未実施
 - [x] [難易度: 中] もっさり対策④日別の即時描画 — カレンダー月一括取得の entries/places を共有キャッシュ（`useDayCache`）に流し込み、日別ページは初期表示に再利用→裏で `/api/day` を refresh。カレンダーからの遷移が即描画に（未キャッシュ日は従来fetch）。entries はカレンダーAPIと `/api/day` で同一値（検証済）
 - [x] [難易度: 小] セット入力時のトースト通知 — 追加/更新/削除の成否を画面下に短時間表示（入力できたかの分かりやすさ向上）。`useToast` ＋ `ui/ToastHost`（default レイアウト常設）を新設。エラーも同トーストに統一
 - [x] [難易度: 小] もっさり対策③マスタの重複ロード抑止 — `useExerciseMaster.load()` をセッション内ロード済みならスキップ（CRUD は `load(true)` で強制更新、ユーザー変化でキャッシュ破棄）。exercises/dashboard を開くたびの3クエリ再取得を削減

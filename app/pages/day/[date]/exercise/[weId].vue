@@ -37,39 +37,58 @@ async function loadMeta() {
   isCardio.value = ex?.body_part?.name === '有酸素'
   isBodyweight.value = !isCardio.value && ex?.training_method?.name === '自重'
   memo.value = (data as any)?.memo ?? ''
+  // 未seed（直接アクセス）または seed と実種別がズレた場合に、正しいグラフだけ取得する。
+  // seed 済みで種別一致なら immediate で取得済みのため二重取得しない。
+  const freshType = isCardio.value ? 'cardio' : isBodyweight.value ? 'bodyweight' : 'strength'
+  if (!cachedEntry || freshType !== cachedEntry.measureType) refreshTrends()
 }
 
+// 日別から遷移した場合はキャッシュ済み DayEntry でメタを即 seed。
+// → exerciseId/種別が mount 時点で確定し、グラフが直列待ちなく即発火・必要分だけ取得できる。
+// 未キャッシュ（直接アクセス/リロード）時は loadMeta で従来通り解決。
+const cachedEntry = useDayCache().get(date)?.entries.find((e) => e.workoutExerciseId === weId)
+if (cachedEntry) {
+  exerciseId.value = cachedEntry.exerciseId
+  exerciseName.value = cachedEntry.exerciseName
+  isCardio.value = cachedEntry.measureType === 'cardio'
+  isBodyweight.value = cachedEntry.measureType === 'bodyweight'
+  memo.value = cachedEntry.memo ?? ''
+}
+// 表示対象のグラフ種別（seed 済みなら即確定）。
+const isStrength = computed(() => !isCardio.value && !isBodyweight.value)
+
 onMounted(() => {
-  loadMeta()
+  loadMeta() // メタはキャッシュの有無に関わらず裏で最新化（メモ等）。
   load()
 })
 
 // 前回比較（§9.4）
 const { last } = useLastRecord(exerciseId, date)
 
-// トップセット推移（日次の最大重量・v_exercise_max_weight 経由）
+// トップセット推移（日次の最大重量・v_exercise_max_weight 経由）。筋トレのみ表示。
+// seed 済み（exerciseId 既知）かつ筋トレなら mount で即発火。未seed時は exerciseId 確定で発火。
 const { data: maxTrend, refresh: refreshMax } = useFetch<MaxWeightResponse>('/api/dashboard/max-weight', {
   query: computed(() => ({ exerciseId: exerciseId.value })),
-  immediate: false,
-  watch: [exerciseId],
+  immediate: !!exerciseId.value && isStrength.value,
+  watch: false, // 取得契機は immediate（seed時）＋ loadMeta の refreshTrends（miss/種別変更時）に限定
   default: () => ({ series: [] }),
 })
 
-// 筋ボリューム推移（日次 Σweight×reps・専用エンドポイント）
+// 筋ボリューム推移（日次 Σweight×reps・専用エンドポイント）。筋トレのみ表示。
 const { data: volumeTrend, refresh: refreshVolume } = useFetch<MaxWeightResponse>(
   () => `/api/exercise/${exerciseId.value}/volume`,
   {
-    immediate: false,
-    watch: [exerciseId],
+    immediate: !!exerciseId.value && isStrength.value,
+    watch: false,
     default: () => ({ series: [] }),
   },
 )
 
-// 種目別最大回数推移（日次・自重のみ。v_exercise_max_reps 経由）
+// 種目別最大回数推移（日次・自重のみ。v_exercise_max_reps 経由）。
 const { data: repsTrend, refresh: refreshReps } = useFetch<MaxWeightResponse>('/api/dashboard/max-reps', {
   query: computed(() => ({ exerciseId: exerciseId.value })),
-  immediate: false,
-  watch: [exerciseId],
+  immediate: !!exerciseId.value && isBodyweight.value,
+  watch: false,
   default: () => ({ series: [] }),
 })
 
