@@ -23,6 +23,22 @@ export function useExerciseMaster() {
   const selectedBodyPartId = useState<string | null>('em:selectedBodyPartId', () => null)
   const loading = useState<boolean>('em:loading', () => false)
   const error = useState<string | null>('em:error', () => null)
+  // セッション内でロード済みか（重複ロード抑止）。CRUD は load(true) で強制更新する。
+  const loaded = useState<boolean>('em:loaded', () => false)
+
+  // ユーザーが変わったらキャッシュ破棄（別アカウントのマスタ混入を防ぐ）。次回 load で再取得。
+  watch(
+    () => user.value?.id,
+    (id, prev) => {
+      if (prev !== undefined && id !== prev) {
+        loaded.value = false
+        bodyParts.value = []
+        methods.value = []
+        exercises.value = []
+        selectedBodyPartId.value = null
+      }
+    },
+  )
 
   // ログインユーザーID。useSupabaseUser が未ハイドレートの瞬間でも
   // セッションから確実に取得する（insert の user_id 用）。
@@ -34,8 +50,12 @@ export function useExerciseMaster() {
     return id
   }
 
-  /** 全マスタ（非アーカイブ）を取得。並びは sort_order 昇順→作成順（screens.md §4.4）。 */
-  async function load() {
+  /**
+   * 全マスタ（非アーカイブ）を取得。並びは sort_order 昇順→作成順（screens.md §4.4）。
+   * セッション内で取得済みなら既定でスキップ（重複ロード抑止）。CRUD 後は force=true で更新。
+   */
+  async function load(force = false) {
+    if (loaded.value && !force) return
     loading.value = true
     error.value = null
     try {
@@ -56,6 +76,7 @@ export function useExerciseMaster() {
       // 初期選択は先頭の部位タブ（§9.5）。選択中が消えていたら先頭に戻す。
       const exists = bodyParts.value.some((b) => b.id === selectedBodyPartId.value)
       if (!exists) selectedBodyPartId.value = bodyParts.value[0]?.id ?? null
+      loaded.value = true
     } catch (e: any) {
       error.value = e?.message ?? 'マスタの取得に失敗しました'
     } finally {
@@ -85,17 +106,17 @@ export function useExerciseMaster() {
     const row: ExerciseInsert = { ...input, user_id: await uid() }
     const { error: e } = await supabase.from('exercise').insert(row)
     if (e) throw e
-    await load()
+    await load(true)
   }
   async function updateExercise(id: string, patch: ExerciseUpdate) {
     const { error: e } = await supabase.from('exercise').update(patch).eq('id', id)
     if (e) throw e
-    await load()
+    await load(true)
   }
   async function archiveExercise(id: string) {
     const { error: e } = await supabase.from('exercise').update({ is_archived: true }).eq('id', id)
     if (e) throw e
-    await load()
+    await load(true)
   }
 
   // ---- body_part CRUD -------------------------------------------------------
@@ -103,17 +124,17 @@ export function useExerciseMaster() {
     const row: BodyPartInsert = { ...input, user_id: await uid() }
     const { error: e } = await supabase.from('body_part').insert(row)
     if (e) throw e
-    await load()
+    await load(true)
   }
   async function updateBodyPart(id: string, patch: BodyPartUpdate) {
     const { error: e } = await supabase.from('body_part').update(patch).eq('id', id)
     if (e) throw e
-    await load()
+    await load(true)
   }
   async function archiveBodyPart(id: string) {
     const { error: e } = await supabase.from('body_part').update({ is_archived: true }).eq('id', id)
     if (e) throw e
-    await load()
+    await load(true)
   }
 
   // ---- training_method CRUD -------------------------------------------------
@@ -121,17 +142,17 @@ export function useExerciseMaster() {
     const row: TrainingMethodInsert = { ...input, user_id: await uid() }
     const { error: e } = await supabase.from('training_method').insert(row)
     if (e) throw e
-    await load()
+    await load(true)
   }
   async function updateMethod(id: string, patch: TrainingMethodUpdate) {
     const { error: e } = await supabase.from('training_method').update(patch).eq('id', id)
     if (e) throw e
-    await load()
+    await load(true)
   }
   async function archiveMethod(id: string) {
     const { error: e } = await supabase.from('training_method').update({ is_archived: true }).eq('id', id)
     if (e) throw e
-    await load()
+    await load(true)
   }
 
   return {
