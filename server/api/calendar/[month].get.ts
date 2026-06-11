@@ -39,11 +39,13 @@ export default defineEventHandler(async (event): Promise<CalendarMonthResponse> 
   if (wRes.error) throw createError({ statusCode: 500, statusMessage: wRes.error.message })
   if (topRes.error) throw createError({ statusCode: 500, statusMessage: topRes.error.message })
   if (setRes.error) throw createError({ statusCode: 500, statusMessage: setRes.error.message })
-  if (supRes.error) throw createError({ statusCode: 500, statusMessage: supRes.error.message })
 
-  // 摂取のある日付集合
+  // 摂取のある日付集合（💊マーク）。非必須機能のため、テーブル未適用等で失敗しても
+  // カレンダー本体は壊さず空で返す（本番マイグレーション未適用時のフォールバック）。
   const supplements: Record<string, boolean> = {}
-  for (const r of supRes.data ?? []) supplements[r.date as string] = true
+  if (!supRes.error) {
+    for (const r of supRes.data ?? []) supplements[r.date as string] = true
+  }
 
   // workout_exercise_id ごとの集計マップ（day API と同一ロジック）
   const topByWe = new Map<string, { weight: number; reps: number }>()
