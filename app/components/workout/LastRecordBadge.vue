@@ -1,9 +1,11 @@
 <script setup lang="ts">
 // セット記録画面上部に前回トップセットと全期間自己ベストを表示するバッジ（§9.4 前回比較）
+// 前回トップセットは「情報表示のみ」。前回セット画面へのジャンプはヘッダ右の専用リンクに分離
+// （コンテンツ内での誤タップ→別日へ飛ぶのを防ぐ）。
 import { formatJst } from '~/utils/date'
 
 defineProps<{
-  /** 前回（この日より前）のトップセット。無ければ null。workoutExerciseId は前回セット画面へのリンク用 */
+  /** 前回（この日より前）のトップセット。無ければ null。 */
   lastTopSet: { date: string; weight: number; reps: number; workoutExerciseId: string } | null
   /** 全期間の自己ベスト重量(kg)。無ければ null */
   bestWeight: number | null
@@ -12,16 +14,12 @@ defineProps<{
 
 <template>
   <div class="badge-row">
-    <!-- 前回トップセット（タップで前回のセット画面へ） -->
-    <NuxtLink
-      v-if="lastTopSet"
-      :to="`/day/${lastTopSet.date}/exercise/${lastTopSet.workoutExerciseId}`"
-      class="chip chip--link"
-    >
+    <!-- 前回トップセット（情報表示のみ・遷移しない） -->
+    <span v-if="lastTopSet" class="chip">
       <span class="label">前回:</span>
       {{ Number(lastTopSet.weight) }}kg × {{ lastTopSet.reps }}
-      <span class="date">（{{ formatJst(lastTopSet.date) }}）›</span>
-    </NuxtLink>
+      <span class="date">（{{ formatJst(lastTopSet.date) }}）</span>
+    </span>
     <span v-else class="chip chip--muted">前回記録なし</span>
 
     <!-- 自己ベスト重量（null のとき非表示） -->

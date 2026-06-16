@@ -11,6 +11,12 @@ const route = useRoute()
 const date = route.params.date as string
 const weId = route.params.weId as string
 
+// 'YYYY-MM-DD' → 'M/D'（前回リンクのコンパクト表示）
+function shortMd(d: string): string {
+  const [, m, day] = d.split('-')
+  return `${Number(m)}/${Number(day)}`
+}
+
 const supabase = useSupabaseClient()
 const toast = useToast()
 const {
@@ -205,7 +211,15 @@ async function saveMemo() {
 <template>
   <section class="page">
     <header class="head">
-      <NuxtLink :to="`/day/${date}`" class="back">‹ 戻る</NuxtLink>
+      <div class="topbar">
+        <NuxtLink :to="`/day/${date}`" class="back">‹ 戻る</NuxtLink>
+        <!-- 前回セットへジャンプ（誤タップ防止のため戻ると同列・右端に配置） -->
+        <NuxtLink
+          v-if="!isCardio && !isBodyweight && last?.lastTopSet"
+          :to="`/day/${last.lastTopSet.date}/exercise/${last.lastTopSet.workoutExerciseId}`"
+          class="prev-link"
+        >前回（{{ shortMd(last.lastTopSet.date) }}）›</NuxtLink>
+      </div>
       <h1>{{ exerciseName || '種目' }}</h1>
     </header>
 
@@ -348,9 +362,22 @@ async function saveMemo() {
   flex-direction: column;
   gap: 0.25rem;
 }
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
 .back {
   font-size: 0.85rem;
   text-decoration: none;
+}
+.prev-link {
+  font-size: 0.8rem;
+  text-decoration: none;
+  color: var(--accent);
+  white-space: nowrap;
+  padding: 0.15rem 0.1rem;
 }
 h1 {
   font-size: 1.15rem;
