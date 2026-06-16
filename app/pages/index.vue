@@ -5,14 +5,14 @@ import CalendarDayPreview from '~/components/calendar/CalendarDayPreview.vue'
 import { todayJst } from '~/utils/date'
 
 const today = todayJst()
-// ?month=YYYY-MM があればその月を初期表示（日別から戻ったとき元の月を維持）。
+// 表示中の月はセッションに保持（ボトムナビ/ブラウザ戻りで再マウントしても元の月を維持）。
+// 初回は今月。?month=YYYY-MM が来たらそれを優先（日別の「‹カレンダー」戻りリンク用）。
 const route = useRoute()
+const month = useState<string>('calendar:month', () => today.slice(0, 7))
 const queryMonth = route.query.month
-const initialMonth =
-  typeof queryMonth === 'string' && /^\d{4}-\d{2}$/.test(queryMonth)
-    ? queryMonth
-    : today.slice(0, 7)
-const month = ref(initialMonth)
+if (typeof queryMonth === 'string' && /^\d{4}-\d{2}$/.test(queryMonth)) {
+  month.value = queryMonth
+}
 const { days, entriesByDate, placesByDate, supplementsByDate, pending } = useCalendar(month)
 
 // 選択中の日付。1回目タップでプレビュー表示、同じ日をもう一度タップで詳細へ。
