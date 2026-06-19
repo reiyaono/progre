@@ -1,8 +1,8 @@
 ### 今後やりたいこと
-- [難易度: 中] 場所の概念を追加したい、workoutに対して1:1で紐づく、とりあえず場所名だけ入力できるように。過去に使った場所名を頻出順で選択できると嬉しい
 - [難易度: 低, 優先度: 低] export機能が欲しい 
 
 ### 完了
+- [x] [難易度: 中] ワークアウトに場所を追加 — `place` マスタ＋`workout_place` 中間表（`workout_id` PK で1:1）。場所名だけ入力、過去の場所名を頻出順で候補表示（`v_place_frequency`＋`<datalist>`）。種目ゼロでも設定可（`fn_set_workout_place` で workout を get-or-create、空入力でリンク解除）。migration `20260610090008_workout_place.sql`
 - [x] [難易度: 中] サプリ摂取をカレンダー化 — 専用「💊サプリ」タブで“今日”を記録（数量＋タイミング、日付前後移動）。サプリ名・タイミングはユーザー編集マスタ（`supplement`/`supplement_timing`、論理削除）、記録はフラット1テーブル `supplement_intake`（date/supplement_id/timing_id?/quantity、ヘッダ無し・RPC不要）。`/supplements`（記録）＋`/supplements/manage`（マスタ）。カレンダーの摂取日に💊マーク（`/api/calendar` に supplements 集合を追加、部位ドットと独立）。新規ユーザーにタイミング3件（朝/筋トレ後/就寝前）をseed。リグレッション34項目PASS
 - [x] [難易度: 中] もっさり対策⑤種目詳細の待ち解消＋ムダ撃ち削減 — 日別キャッシュ（`useDayCache`）の DayEntry でメタを即 seed。グラフは `immediate`（seed時）＋ `loadMeta` の `refreshTrends`（未キャッシュ/種別ズレ時）で発火、`watch:false` 化。これにより「weId→exerciseId 解決を待つ直列2往復」を解消し、種別に応じて必要なグラフだけ取得（筋トレ=max/volume、自重=reps、有酸素=なし）。※クライアント変更のみ・実ブラウザ検証は未実施
 - [x] [難易度: 中] もっさり対策④日別の即時描画 — カレンダー月一括取得の entries/places を共有キャッシュ（`useDayCache`）に流し込み、日別ページは初期表示に再利用→裏で `/api/day` を refresh。カレンダーからの遷移が即描画に（未キャッシュ日は従来fetch）。entries はカレンダーAPIと `/api/day` で同一値（検証済）
