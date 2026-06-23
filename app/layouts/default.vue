@@ -64,7 +64,9 @@ async function onLogout() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
+  /* PWA スタンドアロン(black-translucent)時、ステータスバー下にコンテンツが
+     回り込むため上端にセーフエリア分を確保（通常ブラウザでは env=0）。 */
+  padding: calc(0.75rem + env(safe-area-inset-top)) 1rem 0.75rem;
   border-bottom: 1px solid var(--border, #e2e2e2);
   background: var(--surface, #fff);
 }
@@ -108,7 +110,8 @@ async function onLogout() {
 .app-main {
   flex: 1;
   padding: 1rem;
-  padding-bottom: 5rem; /* ボトムナビ分の余白 */
+  /* ボトムナビ分＋ホームインジケータのセーフエリア余白 */
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
 }
 .bottom-nav {
   position: fixed;
@@ -118,6 +121,8 @@ async function onLogout() {
   display: flex;
   border-top: 1px solid var(--border, #e2e2e2);
   background: var(--surface, #fff);
+  /* ホームインジケータ（下部セーフエリア）分を確保 */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 .nav-item {
   flex: 1;
