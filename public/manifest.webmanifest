@@ -1,0 +1,13 @@
+{
+  "name": "PROGRE",
+  "short_name": "PROGRE",
+  "description": "筋トレの記録と漸進性過負荷（progressive overload）を可視化するアプリ",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#14171a",
+  "theme_color": "#14171a",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" }
+  ]
+}

@@ -13,8 +13,20 @@ export default defineNuxtConfig({
       meta: [
         { name: 'description', content: '筋トレの記録と漸進性過負荷（progressive overload）を可視化するアプリ' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+        // PWA: iOS でホーム画面アイコンをスタンドアロン起動させる（Safari の X/下部バーを消し、
+        // 毎回 start_url='/'=今日の月のカレンダーから開く）。設定が無いと iOS は Web クリップ作成時の
+        // 起点URLを焼き付け、起動のたびにその日付へ戻ってしまう。
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+        { name: 'apple-mobile-web-app-title', content: 'PROGRE' },
+        { name: 'theme-color', content: '#14171a' },
       ],
-      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'manifest', href: '/manifest.webmanifest' },
+        { rel: 'apple-touch-icon', href: '/favicon.svg' },
+      ],
       // FOUC防止: ハイドレーション前にテーマを <html> へ反映（保存値→OS設定）。
       script: [
         {
