@@ -21,6 +21,8 @@ export function useExerciseMaster() {
   const methods = useState<TrainingMethod[]>('em:methods', () => [])
   const exercises = useState<Exercise[]>('em:exercises', () => [])
   const selectedBodyPartId = useState<string | null>('em:selectedBodyPartId', () => null)
+  // 種目の使用頻度（頻出順ピッカー用）。exercise_id → { cnt: 全期間の使用日数, last: 最終使用日 }。
+  const freq = useState<Record<string, { cnt: number; last: string | null }>>('em:freq', () => ({}))
   const loading = useState<boolean>('em:loading', () => false)
   const error = useState<string | null>('em:error', () => null)
   // セッション内でロード済みか（重複ロード抑止）。CRUD は load(true) で強制更新する。
@@ -35,6 +37,7 @@ export function useExerciseMaster() {
         bodyParts.value = []
         methods.value = []
         exercises.value = []
+        freq.value = {}
         selectedBodyPartId.value = null
       }
     },
@@ -59,13 +62,15 @@ export function useExerciseMaster() {
     loading.value = true
     error.value = null
     try {
-      const [bp, tm, ex] = await Promise.all([
+      const [bp, tm, ex, fq] = await Promise.all([
         supabase.from('body_part').select('*').eq('is_archived', false)
           .order('sort_order').order('created_at'),
         supabase.from('training_method').select('*').eq('is_archived', false)
           .order('sort_order').order('created_at'),
         supabase.from('exercise').select('*').eq('is_archived', false)
           .order('sort_order').order('created_at'),
+        // 使用頻度（頻出順ピッカー用）。集計はビュー側（v_exercise_frequency）で実施。
+        supabase.from('v_exercise_frequency').select('exercise_id, cnt, last_used'),
       ])
       if (bp.error) throw bp.error
       if (tm.error) throw tm.error
@@ -73,6 +78,14 @@ export function useExerciseMaster() {
       bodyParts.value = bp.data ?? []
       methods.value = tm.data ?? []
       exercises.value = ex.data ?? []
+      // 頻度は付加情報。取得失敗（fq.error）しても致命的でないので空マップにフォールバック。
+      const fmap: Record<string, { cnt: number; last: string | null }> = {}
+      if (!fq.error) {
+        for (const r of fq.data ?? []) {
+          if (r.exercise_id) fmap[r.exercise_id] = { cnt: r.cnt ?? 0, last: r.last_used ?? null }
+        }
+      }
+      freq.value = fmap
       // 初期選択は先頭の部位タブ（§9.5）。選択中が消えていたら先頭に戻す。
       const exists = bodyParts.value.some((b) => b.id === selectedBodyPartId.value)
       if (!exists) selectedBodyPartId.value = bodyParts.value[0]?.id ?? null
@@ -87,6 +100,19 @@ export function useExerciseMaster() {
   // 表示用ヘルパ
   const filteredExercises = computed(() =>
     exercises.value.filter((e) => e.body_part_id === selectedBodyPartId.value),
+  )
+  // 種目ピッカー用：部位で絞った後、頻出順（cnt 降順 → 直近使用日 降順 → 既存の sort_order）。
+  // filteredExercises はマスタ管理画面が使う固定順なので変更せず、ここで複製してソートする。
+  const pickerExercises = computed(() =>
+    [...filteredExercises.value].sort((a, b) => {
+      const fa = freq.value[a.id], fb = freq.value[b.id]
+      const ca = fa?.cnt ?? 0, cb = fb?.cnt ?? 0
+      if (cb !== ca) return cb - ca
+      const la = fa?.last ?? '', lb = fb?.last ?? ''
+      if (la !== lb) return lb < la ? -1 : 1
+      return (a.sort_order - b.sort_order) ||
+        (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0)
+    }),
   )
   function bodyPartById(id: string | null) {
     return bodyParts.value.find((b) => b.id === id) ?? null
@@ -157,7 +183,7 @@ export function useExerciseMaster() {
 
   return {
     bodyParts, methods, exercises, selectedBodyPartId, loading, error,
-    filteredExercises, bodyPartById, methodById, isDuplicateExerciseName,
+    filteredExercises, pickerExercises, bodyPartById, methodById, isDuplicateExerciseName,
     load,
     addExercise, updateExercise, archiveExercise,
     addBodyPart, updateBodyPart, archiveBodyPart,

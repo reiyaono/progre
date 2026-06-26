@@ -491,6 +491,58 @@ export type Database = {
         }
         Relationships: []
       }
+      v_exercise_frequency: {
+        Row: {
+          cnt: number | null
+          exercise_id: string | null
+          last_used: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_exercise_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercise"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_exercise_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "v_exercise_est_1rm"
+            referencedColumns: ["exercise_id"]
+          },
+          {
+            foreignKeyName: "workout_exercise_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "v_exercise_max_reps"
+            referencedColumns: ["exercise_id"]
+          },
+          {
+            foreignKeyName: "workout_exercise_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "v_exercise_max_weight"
+            referencedColumns: ["exercise_id"]
+          },
+          {
+            foreignKeyName: "workout_exercise_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "v_set_detail"
+            referencedColumns: ["exercise_id"]
+          },
+          {
+            foreignKeyName: "workout_exercise_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "v_top_set"
+            referencedColumns: ["exercise_id"]
+          },
+        ]
+      }
       v_exercise_max_reps: {
         Row: {
           date: string | null

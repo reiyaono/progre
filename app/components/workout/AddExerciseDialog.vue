@@ -7,7 +7,7 @@ import type { BodyPart } from '~/types/db'
 const emit = defineEmits<{ pick: [exerciseId: string]; close: [] }>()
 
 const em = useExerciseMaster()
-const { bodyParts, selectedBodyPartId, filteredExercises, loading } = em
+const { bodyParts, selectedBodyPartId, pickerExercises, loading } = em
 onMounted(() => em.load())
 
 // ピッカー内ではタブ追加/編集はしない（選択のみ）
@@ -25,8 +25,8 @@ function noop(_?: BodyPart) {}
     />
 
     <p v-if="loading" class="muted">読み込み中…</p>
-    <ul v-else-if="filteredExercises.length" class="picklist">
-      <li v-for="e in filteredExercises" :key="e.id">
+    <ul v-else-if="pickerExercises.length" class="picklist">
+      <li v-for="e in pickerExercises" :key="e.id">
         <button type="button" class="pick" @click="emit('pick', e.id)">{{ e.name }}</button>
       </li>
     </ul>

@@ -168,6 +168,22 @@ as $$
   order by cur.body_part_name;
 $$;
 
+-- ----------------------------------------------------------------------------
+-- 種目の使用頻度ビュー（頻出順の種目ピッカー用）。
+-- workout_exercise を種目ごとに集計。RLS は workout/workout_exercise の
+-- 既存ポリシー経由で効くため security_invoker（新規ポリシー不要）。
+-- ※実装は supabase/migrations/20260626090001_exercise_frequency.sql
+-- ----------------------------------------------------------------------------
+create view public.v_exercise_frequency
+with (security_invoker = true) as
+select w.user_id,
+       we.exercise_id,
+       count(*)::int as cnt,        -- その種目を行った日数の合計（全期間）
+       max(w.date)   as last_used    -- 同数のときの並び替え用（直近優先）
+from public.workout_exercise we
+join public.workout w on w.id = we.workout_id
+group by w.user_id, we.exercise_id;
+
 -- ============================================================================
 -- 集計オブジェクト一覧（ダッシュボード4指標との対応・要件 F-05）
 -- ----------------------------------------------------------------------------
@@ -176,5 +192,6 @@ $$;
 --   fn_overloaded_report     … ③ 週次OVERLOADEDレポート（今週vs先週）
 --   v_exercise_est_1rm       … ④ 推定1RM / Max推移（Epley・日次）
 --   v_top_set                … 記録画面の「前回トップセット」参照（§9.4）に利用
+--   v_exercise_frequency     … 種目ピッカーの頻出順（全期間の使用日数）
 -- 期間/部位/種目の絞り込みは呼び出し側（WHERE）で行う（既定 直近12週・§9.2）。
 -- ============================================================================
