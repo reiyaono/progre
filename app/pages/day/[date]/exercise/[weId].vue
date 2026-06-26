@@ -120,6 +120,15 @@ const reps = ref(10)
 const interval = ref<number | null>(null)
 const durationMin = ref(20) // 有酸素の時間（分）
 
+// インターバル入力の橋渡し。type=number を空にすると v-model.number は '' を返し
+// null に戻せない（＝未記入扱いにできない）ため、空文字は null に正規化する。
+const intervalInput = computed<number | null>({
+  get: () => interval.value,
+  set: (v) => {
+    interval.value = v === null || (v as unknown as string) === '' ? null : Number(v)
+  },
+})
+
 const weightOk = computed(() => isValidWeight(weight.value))
 const repsOk = computed(() => isValidReps(reps.value))
 const intervalOk = computed(() => isValidInterval(interval.value))
@@ -300,7 +309,7 @@ async function saveMemo() {
           <label>インターバル(秒・任意)</label>
           <div class="ctrl">
             <button type="button" class="btn" @click="stepInterval(-30)">−</button>
-            <input v-model.number="interval" type="number" step="1" min="0" inputmode="numeric" placeholder="未記録" />
+            <input v-model="intervalInput" type="number" step="1" min="0" inputmode="numeric" placeholder="未記録" />
             <button type="button" class="btn" @click="stepInterval(30)">＋</button>
           </div>
         </div>
