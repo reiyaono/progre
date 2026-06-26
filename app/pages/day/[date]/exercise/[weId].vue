@@ -11,6 +11,9 @@ const route = useRoute()
 const date = route.params.date as string
 const weId = route.params.weId as string
 
+// 前回ジャンプ経由なら遷移元へ、直接アクセス／日別からの通常遷移時は当日の日別ページへ
+const backTo = computed(() => (route.query.from as string) || `/day/${date}`)
+
 // 'YYYY-MM-DD' → 'M/D'（前回リンクのコンパクト表示）
 function shortMd(d: string): string {
   const [, m, day] = d.split('-')
@@ -212,11 +215,15 @@ async function saveMemo() {
   <section class="page">
     <header class="head">
       <div class="topbar">
-        <NuxtLink :to="`/day/${date}`" class="back">‹ 戻る</NuxtLink>
+        <NuxtLink :to="backTo" class="back">‹ 戻る</NuxtLink>
         <!-- 前回セットへジャンプ（誤タップ防止のため戻ると同列・右端に配置） -->
+        <!-- 遷移元を from で渡し、ジャンプ先の「戻る」が元の種目画面へ戻れるようにする -->
         <NuxtLink
           v-if="!isCardio && !isBodyweight && last?.lastTopSet"
-          :to="`/day/${last.lastTopSet.date}/exercise/${last.lastTopSet.workoutExerciseId}`"
+          :to="{
+            path: `/day/${last.lastTopSet.date}/exercise/${last.lastTopSet.workoutExerciseId}`,
+            query: { from: route.fullPath },
+          }"
           class="prev-link"
         >前回（{{ shortMd(last.lastTopSet.date) }}）›</NuxtLink>
       </div>
