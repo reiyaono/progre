@@ -5,6 +5,7 @@ import LastRecordBadge from '~/components/workout/LastRecordBadge.vue'
 import LineChart from '~/components/chart/LineChart.vue'
 import LoadingSpinner from '~/components/ui/LoadingSpinner.vue'
 import { isValidWeight, isValidReps, isValidInterval, isValidDuration, WEIGHT_STEP } from '~/utils/validation'
+import { formatJst } from '~/utils/date'
 import type { MaxWeightResponse } from '#shared/types/api'
 
 const route = useRoute()
@@ -228,6 +229,7 @@ async function saveMemo() {
         >前回（{{ shortMd(last.lastTopSet.date) }}）›</NuxtLink>
       </div>
       <h1>{{ exerciseName || '種目' }}</h1>
+      <p class="date">{{ formatJst(date) }}</p>
     </header>
 
     <!-- 前回比較バッジ（筋トレのみ・最上部に残す） -->
@@ -388,6 +390,11 @@ async function saveMemo() {
 }
 h1 {
   font-size: 1.15rem;
+  margin: 0;
+}
+.date {
+  font-size: 0.8rem;
+  color: var(--muted);
   margin: 0;
 }
 h2 {
