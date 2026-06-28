@@ -22,3 +22,7 @@ logs
 .env
 .env.*
 !.env.example
+
+# 移行関連の個人データ（公開しない）。スクリプトと seed.sql のみ追跡する。
+migration/*.csv
+migration/prod_backup_*.json
