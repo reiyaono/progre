@@ -102,9 +102,22 @@ const { data: repsTrend, refresh: refreshReps } = useFetch<MaxWeightResponse>('/
   default: () => ({ series: [] }),
 })
 
-// セット変更後にグラフを連動更新（筋トレ＝重量系／自重＝回数）
+// 実施時間推移（日次・有酸素のみ。合計分・専用エンドポイント）。
+const { data: durationTrend, refresh: refreshDuration } = useFetch<MaxWeightResponse>(
+  () => `/api/exercise/${exerciseId.value}/duration`,
+  {
+    immediate: !!exerciseId.value && isCardio.value,
+    watch: false,
+    default: () => ({ series: [] }),
+  },
+)
+
+// セット変更後にグラフを連動更新（筋トレ＝重量系／自重＝回数／有酸素＝時間）
 function refreshTrends() {
-  if (isCardio.value) return
+  if (isCardio.value) {
+    refreshDuration()
+    return
+  }
   if (isBodyweight.value) {
     refreshReps()
     return
@@ -364,6 +377,14 @@ async function saveMemo() {
       <h2>最大回数の推移</h2>
       <ClientOnly>
         <LineChart :series="repsTrend?.series ?? []" x-type="day" unit="回" />
+      </ClientOnly>
+    </div>
+
+    <!-- 推移グラフ（有酸素＝実施時間） -->
+    <div v-else class="chart-box">
+      <h2>実施時間の推移</h2>
+      <ClientOnly>
+        <LineChart :series="durationTrend?.series ?? []" x-type="day" unit="分" />
       </ClientOnly>
     </div>
   </section>
