@@ -105,6 +105,17 @@ const { data: volumeTrend, refresh: refreshVolume } = useFetch<MaxWeightResponse
   },
 )
 
+// 最大セットボリューム推移（日次・その日で最も weight×reps が大きい1セット）。筋トレのみ表示。
+const { data: topVolumeTrend, refresh: refreshTopVolume } = useFetch<MaxWeightResponse>(
+  () => `/api/exercise/${exerciseId.value}/top-volume`,
+  {
+    query: computed(() => ({ from: fromDate.value })),
+    immediate: !!exerciseId.value && isStrength.value,
+    watch: false,
+    default: () => ({ series: [] }),
+  },
+)
+
 // 種目別最大回数推移（日次・自重のみ。v_exercise_max_reps 経由）。
 const { data: repsTrend, refresh: refreshReps } = useFetch<MaxWeightResponse>('/api/dashboard/max-reps', {
   query: computed(() => ({ exerciseId: exerciseId.value, from: fromDate.value })),
@@ -136,6 +147,7 @@ function refreshTrends() {
   }
   refreshMax()
   refreshVolume()
+  refreshTopVolume()
 }
 
 // 期間ボタン: 表示日数を切り替えて、表示中のグラフだけ取り直す。
@@ -392,6 +404,13 @@ async function saveMemo() {
         <h2>筋ボリューム推移</h2>
         <ClientOnly>
           <LineChart :series="volumeTrend?.series ?? []" x-type="day" unit="volume" />
+        </ClientOnly>
+      </div>
+
+      <div class="chart-box">
+        <h2>最大セットボリューム推移（その日の最重量セット）</h2>
+        <ClientOnly>
+          <LineChart :series="topVolumeTrend?.series ?? []" x-type="day" unit="volume" />
         </ClientOnly>
       </div>
 
