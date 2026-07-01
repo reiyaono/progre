@@ -72,7 +72,17 @@ const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { display: true },
+    legend: {
+      display: true,
+      labels: {
+        usePointStyle: true, // 太い色バーではなく小さな点で凡例をコンパクトに
+        pointStyle: 'circle',
+        boxWidth: 8,
+        boxHeight: 8,
+        padding: 10,
+        font: { size: 11 },
+      },
+    },
     title: { display: false },
   },
   scales: {

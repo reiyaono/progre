@@ -52,20 +52,28 @@ const isEmpty = computed(() =>
         </ClientOnly>
       </div>
 
-      <!-- ② 種目別最大重量推移（日次） -->
-      <div class="block">
-        <h2>種目別 最大重量推移</h2>
-        <ClientOnly>
-          <LineChart :series="maxWeight?.series ?? []" x-type="day" unit="kg" />
-        </ClientOnly>
-      </div>
+      <!-- ②④ 種目別グラフは種目を1つ選んだときだけ表示（全種目重ね描きの回避） -->
+      <template v-if="filter.exerciseId">
+        <!-- ② 種目別最大重量推移（日次） -->
+        <div class="block">
+          <h2>種目別 最大重量推移</h2>
+          <ClientOnly>
+            <LineChart :series="maxWeight?.series ?? []" x-type="day" unit="kg" />
+          </ClientOnly>
+        </div>
 
-      <!-- ④ 推定1RM / Max推移（日次） -->
-      <div class="block">
-        <h2>推定1RM 推移（Epley）</h2>
-        <ClientOnly>
-          <LineChart :series="est1rm?.series ?? []" x-type="day" unit="kg" />
-        </ClientOnly>
+        <!-- ④ 推定1RM / Max推移（日次） -->
+        <div class="block">
+          <h2>推定1RM 推移（Epley）</h2>
+          <ClientOnly>
+            <LineChart :series="est1rm?.series ?? []" x-type="day" unit="kg" />
+          </ClientOnly>
+        </div>
+      </template>
+
+      <!-- 種目未選択時は種目別グラフのプレースホルダを表示 -->
+      <div v-else class="block pick-hint">
+        <p>種目別の推移（最大重量・推定1RM）は、上の「種目」を1つ選ぶと表示されます。</p>
       </div>
     </template>
   </section>
@@ -101,6 +109,17 @@ h1 {
 }
 .muted {
   color: var(--muted);
+  margin: 0;
+}
+.pick-hint {
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 1.2rem;
+  text-align: center;
+}
+.pick-hint p {
+  color: var(--muted);
+  font-size: 0.85rem;
   margin: 0;
 }
 </style>
