@@ -5,7 +5,7 @@ import LastRecordBadge from '~/components/workout/LastRecordBadge.vue'
 import LineChart from '~/components/chart/LineChart.vue'
 import LoadingSpinner from '~/components/ui/LoadingSpinner.vue'
 import { isValidWeight, isValidReps, isValidInterval, isValidDuration, WEIGHT_STEP } from '~/utils/validation'
-import { formatJst } from '~/utils/date'
+import { formatJst, addDays, todayJst } from '~/utils/date'
 import type { MaxWeightResponse } from '#shared/types/api'
 
 const route = useRoute()
@@ -67,6 +67,16 @@ if (cachedEntry) {
 // 表示対象のグラフ種別（seed 済みなら即確定）。
 const isStrength = computed(() => !isCardio.value && !isBodyweight.value)
 
+// 推移グラフの表示期間（日数・ボタンで切替）。既定は3ヶ月。
+const PERIODS = [
+  { label: '1ヶ月', days: 30 },
+  { label: '3ヶ月', days: 90 },
+  { label: '半年', days: 180 },
+  { label: '1年', days: 365 },
+] as const
+const periodDays = ref(90)
+const fromDate = computed(() => addDays(todayJst(), -periodDays.value))
+
 onMounted(() => {
   loadMeta() // メタはキャッシュの有無に関わらず裏で最新化（メモ等）。
   load()
@@ -78,7 +88,7 @@ const { last } = useLastRecord(exerciseId, date)
 // トップセット推移（日次の最大重量・v_exercise_max_weight 経由）。筋トレのみ表示。
 // seed 済み（exerciseId 既知）かつ筋トレなら mount で即発火。未seed時は exerciseId 確定で発火。
 const { data: maxTrend, refresh: refreshMax } = useFetch<MaxWeightResponse>('/api/dashboard/max-weight', {
-  query: computed(() => ({ exerciseId: exerciseId.value })),
+  query: computed(() => ({ exerciseId: exerciseId.value, from: fromDate.value })),
   immediate: !!exerciseId.value && isStrength.value,
   watch: false, // 取得契機は immediate（seed時）＋ loadMeta の refreshTrends（miss/種別変更時）に限定
   default: () => ({ series: [] }),
@@ -88,6 +98,7 @@ const { data: maxTrend, refresh: refreshMax } = useFetch<MaxWeightResponse>('/ap
 const { data: volumeTrend, refresh: refreshVolume } = useFetch<MaxWeightResponse>(
   () => `/api/exercise/${exerciseId.value}/volume`,
   {
+    query: computed(() => ({ from: fromDate.value })),
     immediate: !!exerciseId.value && isStrength.value,
     watch: false,
     default: () => ({ series: [] }),
@@ -96,7 +107,7 @@ const { data: volumeTrend, refresh: refreshVolume } = useFetch<MaxWeightResponse
 
 // 種目別最大回数推移（日次・自重のみ。v_exercise_max_reps 経由）。
 const { data: repsTrend, refresh: refreshReps } = useFetch<MaxWeightResponse>('/api/dashboard/max-reps', {
-  query: computed(() => ({ exerciseId: exerciseId.value })),
+  query: computed(() => ({ exerciseId: exerciseId.value, from: fromDate.value })),
   immediate: !!exerciseId.value && isBodyweight.value,
   watch: false,
   default: () => ({ series: [] }),
@@ -106,6 +117,7 @@ const { data: repsTrend, refresh: refreshReps } = useFetch<MaxWeightResponse>('/
 const { data: durationTrend, refresh: refreshDuration } = useFetch<MaxWeightResponse>(
   () => `/api/exercise/${exerciseId.value}/duration`,
   {
+    query: computed(() => ({ from: fromDate.value })),
     immediate: !!exerciseId.value && isCardio.value,
     watch: false,
     default: () => ({ series: [] }),
@@ -124,6 +136,13 @@ function refreshTrends() {
   }
   refreshMax()
   refreshVolume()
+}
+
+// 期間ボタン: 表示日数を切り替えて、表示中のグラフだけ取り直す。
+function setPeriod(days: number) {
+  if (periodDays.value === days) return
+  periodDays.value = days
+  refreshTrends()
 }
 
 // ---- セット入力フォーム（+/− ステッパー） ---------------------------------
@@ -355,6 +374,18 @@ async function saveMemo() {
       </div>
     </div>
 
+    <!-- 推移グラフの表示期間切り替え -->
+    <div class="period-toggle">
+      <button
+        v-for="p in PERIODS"
+        :key="p.days"
+        type="button"
+        class="period-btn"
+        :class="{ active: periodDays === p.days }"
+        @click="setPeriod(p.days)"
+      >{{ p.label }}</button>
+    </div>
+
     <!-- ④⑤ 推移グラフ（筋トレ＝重量系） -->
     <template v-if="!isCardio && !isBodyweight">
       <div class="chart-box">
@@ -481,5 +512,24 @@ textarea {
 }
 .muted {
   color: var(--muted);
+}
+.period-toggle {
+  display: flex;
+  gap: 0.4rem;
+}
+.period-btn {
+  flex: 1;
+  padding: 0.45rem 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.period-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 </style>
