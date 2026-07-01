@@ -32,13 +32,14 @@ export default defineEventHandler(async (event): Promise<MaxWeightResponse> => {
   const { data, error } = await query
   if (error) throw createError({ statusCode: 500, statusMessage: error.message })
 
-  // exercise_id ごとにグルーピングして Series[] に整形（color は省略）
-  const map = new Map<string, { label: string; points: { x: string; y: number }[] }>()
+  // exercise_id ごとにグルーピングして Series[] に整形（種目画面の他グラフと被らない紫）
+  const map = new Map<string, { label: string; color: string; points: { x: string; y: number }[] }>()
   for (const row of (data ?? []) as any[]) {
     const id: string = row.exercise_id
     if (!map.has(id)) {
       map.set(id, {
         label: row.exercise_name,
+        color: '#9c36b5',
         points: [],
       })
     }
