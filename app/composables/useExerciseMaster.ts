@@ -164,7 +164,7 @@ export function useExerciseMaster() {
   }
 
   // ---- training_method CRUD -------------------------------------------------
-  async function addMethod(input: { name: string }) {
+  async function addMethod(input: { name: string; icon_key: string | null }) {
     const row: TrainingMethodInsert = { ...input, user_id: await uid() }
     const { error: e } = await supabase.from('training_method').insert(row)
     if (e) throw e

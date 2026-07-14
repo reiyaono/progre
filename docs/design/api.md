@@ -35,7 +35,7 @@
 | ダッシュボード② 種目別最大重量推移 | 日次max | `GET server/api/dashboard/max-weight` | `v_exercise_max_weight` |
 | ダッシュボード③ OVERLOADED | 今週vs先週 | `GET server/api/dashboard/overloaded?week=[date]` | `fn_overloaded_report` |
 | ダッシュボード④ 推定1RM推移 | 日次Epley | `GET server/api/dashboard/est-1rm` | `v_exercise_est_1rm` |
-| 種目マスタ CRUD | 種目/部位/方法 | SDK直＋RLS | exercise / body_part / training_method |
+| 種目マスタ CRUD | 種目/部位/方法（方法の固定アイコンキーを含む） | SDK直＋RLS | exercise / body_part / training_method |
 | 記録 CRUD | workout/we/set 作成・編集・削除 | SDK直＋RLS（＋下記トランザクション） | workout / workout_exercise / workout_set |
 
 - 集計系GETは期間/部位/種目で絞り込み（クエリパラメータ）。既定 直近12週（§9.2）。

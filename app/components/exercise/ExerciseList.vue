@@ -1,12 +1,19 @@
 <script setup lang="ts">
 // 選択部位の種目一覧。タップで編集。空状態は「種目を追加」導線（screens.md §4.4）。
 import type { Exercise, TrainingMethod } from '~/types/db'
+import { isTrainingMethodIconKey } from '~/utils/trainingMethodIcon'
+import type { TrainingMethodIconKey } from '~/utils/trainingMethodIcon'
 
-defineProps<{
+const props = defineProps<{
   exercises: Exercise[]
   methodById: (id: string | null) => TrainingMethod | null
 }>()
 const emit = defineEmits<{ edit: [exercise: Exercise]; add: [] }>()
+
+function methodIcon(id: string | null): TrainingMethodIconKey | null {
+  const key = props.methodById(id)?.icon_key ?? null
+  return isTrainingMethodIconKey(key) ? key : null
+}
 </script>
 
 <template>
@@ -14,7 +21,14 @@ const emit = defineEmits<{ edit: [exercise: Exercise]; add: [] }>()
     <ul v-if="exercises.length" class="list">
       <li v-for="e in exercises" :key="e.id">
         <button type="button" class="row" @click="emit('edit', e)">
-          <span class="name">{{ e.name }}</span>
+          <span class="exercise-name">
+            <UiTrainingMethodIcon
+              v-if="methodIcon(e.training_method_id)"
+              :icon-key="methodIcon(e.training_method_id)!"
+              :size="22"
+            />
+            <span class="name">{{ e.name }}</span>
+          </span>
           <span v-if="methodById(e.training_method_id)" class="method">
             {{ methodById(e.training_method_id)?.name }}
           </span>
@@ -53,6 +67,12 @@ const emit = defineEmits<{ edit: [exercise: Exercise]; add: [] }>()
 }
 .name {
   font-size: 0.95rem;
+}
+.exercise-name {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
 }
 .method {
   font-size: 0.75rem;

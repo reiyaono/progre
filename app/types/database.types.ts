@@ -262,6 +262,7 @@ export type Database = {
       training_method: {
         Row: {
           created_at: string
+          icon_key: string | null
           id: string
           is_archived: boolean
           name: string
@@ -270,6 +271,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          icon_key?: string | null
           id?: string
           is_archived?: boolean
           name: string
@@ -278,6 +280,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          icon_key?: string | null
           id?: string
           is_archived?: boolean
           name?: string

@@ -36,6 +36,9 @@ create table public.training_method (
   id          uuid        primary key default gen_random_uuid(),
   user_id     uuid        not null references auth.users (id) on delete cascade,
   name        text        not null,
+  icon_key    text            null check (
+    icon_key is null or icon_key in ('bodyweight', 'machine', 'free_weight', 'cardio', 'other')
+  ),
   sort_order  integer     not null default 0,
   is_archived boolean     not null default false,
   created_at  timestamptz not null default now()

@@ -38,12 +38,12 @@ begin
     (new.id, '有酸素', '#0091FF', 6) returning id into bp_cardio;
 
   -- トレーニング方法
-  insert into public.training_method (user_id, name, sort_order) values
-    (new.id, '自重',         1) returning id into tm_body;
-  insert into public.training_method (user_id, name, sort_order) values
-    (new.id, 'マシン',       2) returning id into tm_machine;
-  insert into public.training_method (user_id, name, sort_order) values
-    (new.id, 'フリーウェイト', 3) returning id into tm_free;
+  insert into public.training_method (user_id, name, icon_key, sort_order) values
+    (new.id, '自重', 'bodyweight', 1) returning id into tm_body;
+  insert into public.training_method (user_id, name, icon_key, sort_order) values
+    (new.id, 'マシン', 'machine', 2) returning id into tm_machine;
+  insert into public.training_method (user_id, name, icon_key, sort_order) values
+    (new.id, 'フリーウェイト', 'free_weight', 3) returning id into tm_free;
 
   -- 代表種目（部位 NOT NULL / 方法は任意。各部位に最低1つ）
   insert into public.exercise (user_id, name, body_part_id, training_method_id, sort_order) values

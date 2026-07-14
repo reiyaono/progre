@@ -7,6 +7,8 @@ import LoadingSpinner from '~/components/ui/LoadingSpinner.vue'
 import ExerciseEditDialog from '~/components/exercise/ExerciseEditDialog.vue'
 import BodyPartEditDialog from '~/components/exercise/BodyPartEditDialog.vue'
 import MethodEditDialog from '~/components/exercise/MethodEditDialog.vue'
+import { isTrainingMethodIconKey } from '~/utils/trainingMethodIcon'
+import type { TrainingMethodIconKey } from '~/utils/trainingMethodIcon'
 
 const em = useExerciseMaster()
 const {
@@ -66,7 +68,7 @@ async function archiveBodyPart(id: string) {
 function openAddMethod() { methodDialog.value = { open: true, model: null } }
 function openEditMethod(m: TrainingMethod) { methodDialog.value = { open: true, model: m } }
 function closeMethod() { methodDialog.value = { open: false, model: null } }
-async function submitMethod(p: { name: string }) {
+async function submitMethod(p: { name: string; icon_key: TrainingMethodIconKey | null }) {
   await run(async () => {
     if (methodDialog.value.model) await em.updateMethod(methodDialog.value.model.id, p)
     else await em.addMethod(p)
@@ -115,7 +117,14 @@ async function archiveMethod(id: string) {
     </div>
     <ul class="method-list">
       <li v-for="m in methods" :key="m.id">
-        <button type="button" class="method-row" @click="openEditMethod(m)">{{ m.name }}</button>
+        <button type="button" class="method-row" @click="openEditMethod(m)">
+          <UiTrainingMethodIcon
+            v-if="isTrainingMethodIconKey(m.icon_key)"
+            :icon-key="m.icon_key"
+            :size="18"
+          />
+          <span>{{ m.name }}</span>
+        </button>
       </li>
       <li v-if="!methods.length" class="muted">方法は未登録です。</li>
     </ul>
@@ -189,6 +198,9 @@ h1 {
   background: var(--surface);
   cursor: pointer;
   font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 .muted {
   color: var(--muted);
