@@ -1,0 +1,4 @@
+interface:
+  display_name: "種目マージ"
+  short_description: "重複した種目マスタとトレーニング記録を安全に統合します"
+  default_prompt: "Use $merge-exercises to inspect and safely merge duplicate exercises in Supabase."
