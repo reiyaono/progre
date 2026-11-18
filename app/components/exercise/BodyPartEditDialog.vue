@@ -2,7 +2,10 @@
 // 部位カテゴリの追加/編集（色＝HEX・カレンダードットの源泉 §9.7）。
 import type { BodyPart } from '~/types/db'
 
-const props = defineProps<{ model?: BodyPart | null }>()
+const props = defineProps<{
+  model?: BodyPart | null
+  checkDuplicate: (name: string, excludeId?: string) => boolean
+}>()
 const emit = defineEmits<{
   submit: [payload: { name: string; color: string }]
   archive: [id: string]
@@ -15,7 +18,8 @@ const color = ref(props.model?.color ?? '#4f8cff')
 
 const HEX_RE = /^#[0-9A-Fa-f]{6}$/
 const validColor = computed(() => HEX_RE.test(color.value))
-const canSave = computed(() => name.value.trim() !== '' && validColor.value)
+const duplicate = computed(() => name.value.trim() !== '' && props.checkDuplicate(name.value, props.model?.id))
+const canSave = computed(() => name.value.trim() !== '' && validColor.value && !duplicate.value)
 
 function onSubmit() {
   if (!canSave.value) return
@@ -30,6 +34,7 @@ function onSubmit() {
         部位名
         <input v-model="name" type="text" required />
       </label>
+      <small v-if="duplicate" class="error-text">同じ名前の部位が既に登録されています。</small>
 
       <div class="field">
         色（HEX）

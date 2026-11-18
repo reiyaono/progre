@@ -4,7 +4,10 @@ import type { TrainingMethod } from '~/types/db'
 import { TRAINING_METHOD_ICONS, isTrainingMethodIconKey } from '~/utils/trainingMethodIcon'
 import type { TrainingMethodIconKey } from '~/utils/trainingMethodIcon'
 
-const props = defineProps<{ model?: TrainingMethod | null }>()
+const props = defineProps<{
+  model?: TrainingMethod | null
+  checkDuplicate: (name: string, excludeId?: string) => boolean
+}>()
 const emit = defineEmits<{
   submit: [payload: { name: string; icon_key: TrainingMethodIconKey | null }]
   archive: [id: string]
@@ -17,7 +20,8 @@ const initialIconKey = props.model?.icon_key ?? null
 const iconKey = ref<TrainingMethodIconKey | ''>(
   isTrainingMethodIconKey(initialIconKey) ? initialIconKey : '',
 )
-const canSave = computed(() => name.value.trim() !== '')
+const duplicate = computed(() => name.value.trim() !== '' && props.checkDuplicate(name.value, props.model?.id))
+const canSave = computed(() => name.value.trim() !== '' && !duplicate.value)
 
 function onSubmit() {
   if (!canSave.value) return
@@ -32,6 +36,7 @@ function onSubmit() {
         方法名
         <input v-model="name" type="text" required />
       </label>
+      <small v-if="duplicate" class="error-text">同じ名前のトレーニング方法が既に登録されています。</small>
 
       <fieldset class="icon-field">
         <legend>アイコン（任意）</legend>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// 種目の追加/編集（screens.md §4.4）。部位必須・方法任意・同名は警告のみ（§9.8）。
+// 種目の追加/編集（screens.md §4.4）。部位必須・方法任意・同名は登録不可（§9.8）。
 // 永続化は親（exercises.vue）が composable で行い、本ダイアログは入力に専念。
 import type { BodyPart, TrainingMethod, Exercise } from '~/types/db'
 
@@ -24,7 +24,7 @@ const bodyPartId = ref<string>(props.model?.body_part_id ?? props.defaultBodyPar
 const methodId = ref<string>(props.model?.training_method_id ?? '')
 
 const duplicate = computed(() => name.value.trim() !== '' && props.checkDuplicate(name.value, props.model?.id))
-const canSave = computed(() => name.value.trim() !== '' && bodyPartId.value !== '')
+const canSave = computed(() => name.value.trim() !== '' && bodyPartId.value !== '' && !duplicate.value)
 
 function onSubmit() {
   if (!canSave.value) return
@@ -59,7 +59,7 @@ function onSubmit() {
         </select>
       </label>
 
-      <p v-if="duplicate" class="warn">同名の種目が既にあります（登録は可能です）。</p>
+      <p v-if="duplicate" class="error-text">同じ名前の種目が既に登録されています。</p>
 
       <div class="btn-row">
         <button v-if="isEdit" type="button" class="btn btn-danger spacer" @click="emit('archive', props.model!.id)">

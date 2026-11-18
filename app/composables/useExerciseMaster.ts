@@ -121,20 +121,36 @@ export function useExerciseMaster() {
     return id ? methods.value.find((m) => m.id === id) ?? null : null
   }
 
-  /** 同名種目の重複判定（§9.8: 警告のみ・制約は課さない）。部位横断で判定。 */
+  /** 表記揺れを吸収して、有効な同一マスタ内で名前の重複を判定する。 */
+  function normalizeMasterName(name: string) {
+    return name.trim().normalize('NFKC').toLocaleLowerCase('ja-JP')
+  }
   function isDuplicateExerciseName(name: string, excludeId?: string) {
-    const n = name.trim()
-    return exercises.value.some((e) => e.id !== excludeId && e.name === n)
+    const n = normalizeMasterName(name)
+    return exercises.value.some((e) => e.id !== excludeId && normalizeMasterName(e.name) === n)
+  }
+  function isDuplicateBodyPartName(name: string, excludeId?: string) {
+    const n = normalizeMasterName(name)
+    return bodyParts.value.some((b) => b.id !== excludeId && normalizeMasterName(b.name) === n)
+  }
+  function isDuplicateMethodName(name: string, excludeId?: string) {
+    const n = normalizeMasterName(name)
+    return methods.value.some((m) => m.id !== excludeId && normalizeMasterName(m.name) === n)
+  }
+  function rejectDuplicate(duplicate: boolean) {
+    if (duplicate) throw new Error('同じ名前のマスタが既に登録されています')
   }
 
   // ---- exercise CRUD --------------------------------------------------------
   async function addExercise(input: { name: string; body_part_id: string; training_method_id: string | null }) {
+    rejectDuplicate(isDuplicateExerciseName(input.name))
     const row: ExerciseInsert = { ...input, user_id: await uid() }
     const { error: e } = await supabase.from('exercise').insert(row)
     if (e) throw e
     await load(true)
   }
   async function updateExercise(id: string, patch: ExerciseUpdate) {
+    if (patch.name !== undefined) rejectDuplicate(isDuplicateExerciseName(patch.name, id))
     const { error: e } = await supabase.from('exercise').update(patch).eq('id', id)
     if (e) throw e
     await load(true)
@@ -147,12 +163,14 @@ export function useExerciseMaster() {
 
   // ---- body_part CRUD -------------------------------------------------------
   async function addBodyPart(input: { name: string; color: string }) {
+    rejectDuplicate(isDuplicateBodyPartName(input.name))
     const row: BodyPartInsert = { ...input, user_id: await uid() }
     const { error: e } = await supabase.from('body_part').insert(row)
     if (e) throw e
     await load(true)
   }
   async function updateBodyPart(id: string, patch: BodyPartUpdate) {
+    if (patch.name !== undefined) rejectDuplicate(isDuplicateBodyPartName(patch.name, id))
     const { error: e } = await supabase.from('body_part').update(patch).eq('id', id)
     if (e) throw e
     await load(true)
@@ -165,12 +183,14 @@ export function useExerciseMaster() {
 
   // ---- training_method CRUD -------------------------------------------------
   async function addMethod(input: { name: string; icon_key: string | null }) {
+    rejectDuplicate(isDuplicateMethodName(input.name))
     const row: TrainingMethodInsert = { ...input, user_id: await uid() }
     const { error: e } = await supabase.from('training_method').insert(row)
     if (e) throw e
     await load(true)
   }
   async function updateMethod(id: string, patch: TrainingMethodUpdate) {
+    if (patch.name !== undefined) rejectDuplicate(isDuplicateMethodName(patch.name, id))
     const { error: e } = await supabase.from('training_method').update(patch).eq('id', id)
     if (e) throw e
     await load(true)
@@ -183,7 +203,8 @@ export function useExerciseMaster() {
 
   return {
     bodyParts, methods, exercises, selectedBodyPartId, loading, error,
-    filteredExercises, pickerExercises, bodyPartById, methodById, isDuplicateExerciseName,
+    filteredExercises, pickerExercises, bodyPartById, methodById,
+    isDuplicateExerciseName, isDuplicateBodyPartName, isDuplicateMethodName,
     load,
     addExercise, updateExercise, archiveExercise,
     addBodyPart, updateBodyPart, archiveBodyPart,

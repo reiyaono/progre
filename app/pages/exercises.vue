@@ -13,7 +13,8 @@ import type { TrainingMethodIconKey } from '~/utils/trainingMethodIcon'
 const em = useExerciseMaster()
 const {
   bodyParts, methods, selectedBodyPartId, loading, error,
-  filteredExercises, bodyPartById, methodById, isDuplicateExerciseName,
+  filteredExercises, bodyPartById, methodById,
+  isDuplicateExerciseName, isDuplicateBodyPartName, isDuplicateMethodName,
 } = em
 
 // 初期ロードはクライアントで（RLSはユーザーセッション前提・SSR副作用を避ける）。
@@ -144,6 +145,7 @@ async function archiveMethod(id: string) {
     <BodyPartEditDialog
       v-if="bodyPartDialog.open"
       :model="bodyPartDialog.model"
+      :check-duplicate="isDuplicateBodyPartName"
       @submit="submitBodyPart"
       @archive="archiveBodyPart"
       @close="closeBodyPart"
@@ -151,6 +153,7 @@ async function archiveMethod(id: string) {
     <MethodEditDialog
       v-if="methodDialog.open"
       :model="methodDialog.model"
+      :check-duplicate="isDuplicateMethodName"
       @submit="submitMethod"
       @archive="archiveMethod"
       @close="closeMethod"
