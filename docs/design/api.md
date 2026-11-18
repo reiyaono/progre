@@ -30,7 +30,7 @@
 | カレンダー（月） | 各日の実施部位色（ユニーク・最大4＋n） | `GET server/api/calendar/[month]` | workout × workout_exercise × exercise × body_part を集約 |
 | 日別ワークアウト | その日の種目リスト＋各トップセット/ボリューム | `GET server/api/day/[date]` または SDK＋`v_top_set` | workout / workout_exercise / `v_top_set` |
 | セット記録 | セット一覧、メモ | SDK直＋RLS | workout_set / workout_exercise |
-| 前回記録参照 | 前回トップセット＋全期間自己ベスト（§9.4） | `GET server/api/exercise/[id]/last?before=[date]` | `v_top_set` ＋ max(weight) |
+| 前回記録参照 | 前回トップセット＋直近日の1セット目＋全期間自己ベスト（§9.4） | `GET server/api/exercise/[id]/last?before=[date]` | `v_top_set` ＋ `v_set_detail(set_no=1)` ＋ max(weight) |
 | ダッシュボード① 部位別ボリューム推移 | 週次Σ | `GET server/api/dashboard/volume` | `v_weekly_bodypart_volume` |
 | ダッシュボード② 種目別最大重量推移 | 日次max | `GET server/api/dashboard/max-weight` | `v_exercise_max_weight` |
 | ダッシュボード③ OVERLOADED | 今週vs先週 | `GET server/api/dashboard/overloaded?week=[date]` | `fn_overloaded_report` |

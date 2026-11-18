@@ -34,6 +34,8 @@ export interface CalendarMonthResponse {
 export interface LastRecordResponse {
   // workoutExerciseId は前回セット編集画面へのリンク用
   lastTopSet: { date: string; weight: number; reps: number; workoutExerciseId: string } | null
+  // 新しい記録の1セット目に使う、直近実施日の1セット目
+  lastFirstSet: { date: string; weight: number | null; reps: number | null } | null
   bestWeight: number | null
 }
 

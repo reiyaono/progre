@@ -77,9 +77,11 @@ const PERIODS = [
 const periodDays = ref(90)
 const fromDate = computed(() => addDays(todayJst(), -periodDays.value))
 
-onMounted(() => {
+const initialSetsLoaded = ref(false)
+onMounted(async () => {
   loadMeta() // メタはキャッシュの有無に関わらず裏で最新化（メモ等）。
-  load()
+  await load()
+  initialSetsLoaded.value = true
 })
 
 // 前回比較（§9.4）
@@ -160,7 +162,9 @@ function setPeriod(days: number) {
 // ---- セット入力フォーム（+/− ステッパー） ---------------------------------
 const editingId = ref<string | null>(null)
 const weight = ref(20)
+const weightTouched = ref(false)
 const reps = ref(10)
+const repsTouched = ref(false)
 const interval = ref<number | null>(null)
 const durationMin = ref(20) // 有酸素の時間（分）
 
@@ -187,10 +191,12 @@ const canSave = computed(() =>
 const isEditing = computed(() => editingId.value !== null)
 
 function stepWeight(d: number) {
+  weightTouched.value = true
   const v = Math.round((weight.value + d) * 4) / 4
   weight.value = Math.min(999, Math.max(0, v))
 }
 function stepReps(d: number) {
+  repsTouched.value = true
   reps.value = Math.min(99, Math.max(1, reps.value + d))
 }
 function stepInterval(d: number) {
@@ -208,13 +214,33 @@ function startEdit(id: string) {
   if (isCardio.value) {
     durationMin.value = Math.round((s.duration_sec ?? 0) / 60) || 1
   } else if (isBodyweight.value) {
+    repsTouched.value = true
     reps.value = s.reps ?? 1
   } else {
+    weightTouched.value = true
+    repsTouched.value = true
     weight.value = Number(s.weight ?? 0)
     reps.value = s.reps ?? 1
     interval.value = s.interval_sec
   }
 }
+
+// 新規1セット目だけ、直近実施日の1セット目と同じ重量・回数を初期表示する。
+// 手入力済み・既存セットあり・編集中の場合は上書きしない。有酸素は対象外。
+watch(
+  [() => last.value?.lastFirstSet, initialSetsLoaded, isCardio],
+  ([previousSet, loaded, cardio]) => {
+    if (!loaded || cardio || !previousSet) return
+    if (sets.value.length || editingId.value) return
+    if (isStrength.value && previousSet.weight !== null && !weightTouched.value) {
+      weight.value = previousSet.weight
+    }
+    if (previousSet.reps !== null && !repsTouched.value) {
+      reps.value = previousSet.reps
+    }
+  },
+  { immediate: true },
+)
 function cancelEdit() {
   editingId.value = null
 }
@@ -324,7 +350,15 @@ async function saveMemo() {
         <label>回数</label>
         <div class="ctrl">
           <button type="button" class="btn" @click="stepReps(-1)">−</button>
-          <input v-model.number="reps" type="number" step="1" min="1" max="99" inputmode="numeric" />
+          <input
+            v-model.number="reps"
+            type="number"
+            step="1"
+            min="1"
+            max="99"
+            inputmode="numeric"
+            @input="repsTouched = true"
+          />
           <button type="button" class="btn" @click="stepReps(1)">＋</button>
         </div>
       </div>
@@ -335,7 +369,15 @@ async function saveMemo() {
           <label>重量(kg)</label>
           <div class="ctrl">
             <button type="button" class="btn" @click="stepWeight(-WEIGHT_STEP)">−</button>
-            <input v-model.number="weight" type="number" step="0.25" min="0" max="999" inputmode="decimal" />
+            <input
+              v-model.number="weight"
+              type="number"
+              step="0.25"
+              min="0"
+              max="999"
+              inputmode="decimal"
+              @input="weightTouched = true"
+            />
             <button type="button" class="btn" @click="stepWeight(WEIGHT_STEP)">＋</button>
           </div>
         </div>
@@ -344,7 +386,15 @@ async function saveMemo() {
           <label>回数</label>
           <div class="ctrl">
             <button type="button" class="btn" @click="stepReps(-1)">−</button>
-            <input v-model.number="reps" type="number" step="1" min="1" max="99" inputmode="numeric" />
+            <input
+              v-model.number="reps"
+              type="number"
+              step="1"
+              min="1"
+              max="99"
+              inputmode="numeric"
+              @input="repsTouched = true"
+            />
             <button type="button" class="btn" @click="stepReps(1)">＋</button>
           </div>
         </div>

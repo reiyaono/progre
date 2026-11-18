@@ -18,7 +18,7 @@ Pinia は**導入しない**。個人利用MVPの規模では Nuxt 組込の `us
 | `useCalendar(month)` | 月次の部位色ドット | `GET server/api/calendar/[month]` |
 | `useWorkout(date)` | 日別の種目エントリ＋トップセット | workout/we ＋ `v_top_set` |
 | `useSetEditor(weId)` | セットCRUD・`set_no`再採番連携 | workout_set（SDK＋server/api） |
-| `useLastRecord(exerciseId, before)` | 前回トップセット＋自己ベスト（§9.4） | `GET server/api/exercise/[id]/last` |
+| `useLastRecord(exerciseId, before)` | 前回トップセット＋直近日の1セット目＋自己ベスト（§9.4） | `GET server/api/exercise/[id]/last` |
 | `useExerciseMaster()` | 種目/部位/方法のCRUD・部位タブ絞り込み | exercise/body_part/training_method（SDK＋RLS） |
 | `useDashboardFilter()` | 期間/部位/種目の選択状態（既定 直近12週） | `useState`（横断状態） |
 | `useDashboard(filter)` | 4指標データ取得 | `server/api/dashboard/*` |

@@ -8,7 +8,7 @@ export function useLastRecord(exerciseId: Ref<string | null>, before: string) {
       query: { before },
       immediate: !!exerciseId.value,
       watch: [exerciseId],
-      default: () => ({ lastTopSet: null, bestWeight: null }),
+      default: () => ({ lastTopSet: null, lastFirstSet: null, bestWeight: null }),
     },
   )
   return { last: computed(() => data.value), pending, refresh }

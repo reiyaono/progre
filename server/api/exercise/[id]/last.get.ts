@@ -1,4 +1,4 @@
-// 前回記録参照（§9.4）。指定日(before)より前の「前回トップセット」と全期間自己ベスト重量を返す。
+// 前回記録参照（§9.4）。前回トップセット、直近実施日の1セット目、全期間自己ベスト重量を返す。
 // v_top_set（種目エントリ毎のトップセット）と v_exercise_max_weight（日次最大）を利用。RLS継承。
 import { serverSupabaseClient } from '#supabase/server'
 import type { LastRecordResponse } from '#shared/types/api'
@@ -25,6 +25,18 @@ export default defineEventHandler(async (event): Promise<LastRecordResponse> => 
   if (lErr) throw createError({ statusCode: 500, statusMessage: lErr.message })
   const last = lastRows?.[0]
 
+  // 1セット目の初期重量 = before より前で最も新しい実施日の set_no=1。
+  const { data: firstRows, error: fErr } = await client
+    .from('v_set_detail')
+    .select('date, weight, reps')
+    .eq('exercise_id', id)
+    .eq('set_no', 1)
+    .lt('date', before)
+    .order('date', { ascending: false })
+    .limit(1)
+  if (fErr) throw createError({ statusCode: 500, statusMessage: fErr.message })
+  const first = firstRows?.[0]
+
   // 全期間自己ベスト重量（v_exercise_max_weight の最大）
   const { data: bestRows, error: bErr } = await client
     .from('v_exercise_max_weight')
@@ -42,6 +54,13 @@ export default defineEventHandler(async (event): Promise<LastRecordResponse> => 
           weight: Number(last.weight),
           reps: Number(last.reps),
           workoutExerciseId: last.workout_exercise_id as string,
+        }
+      : null,
+    lastFirstSet: first
+      ? {
+          date: first.date as string,
+          weight: first.weight === null ? null : Number(first.weight),
+          reps: first.reps === null ? null : Number(first.reps),
         }
       : null,
     bestWeight: best ? Number(best.max_weight) : null,
